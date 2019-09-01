@@ -72,7 +72,7 @@ class QGameCounter(QMainWindow):
         self.itemFocusLeftAct = QAction('Left Item', self, shortcut=Qt.CTRL + Qt.Key_Left, triggered=self.imageGridViewer.moveFocusLeft)
         self.itemFocusRightAct = QAction('Right Item', self, shortcut=Qt.CTRL + Qt.Key_Right, triggered=self.imageGridViewer.moveFocusRight)
 
-        self.imageGridsToggle = QAction('View Grids', self, checkable=True, shortcut=Qt.CTRL + Qt.Key_I, triggered=self.updateImageGridVisibility)
+        self.imageGridsToggle = QAction('View Grids', self, checkable=True, checked=True, shortcut=Qt.CTRL + Qt.Key_I, triggered=self.updateImageGridVisibility)
 
     def createMenus(self):
         self.fileMenu = QMenu('&File', self)
