@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PyQt5.QtCore import Qt, QSize, QFile, QTextStream, pyqtSignal
+from PyQt5.QtCore import Qt, QSize, QFile, QTextStream, pyqtSignal, pyqtSlot, QObject
 from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter
 from PyQt5.QtWidgets import (
     QLabel, QSizePolicy, QScrollArea,
@@ -12,6 +12,10 @@ from QImageGridErrors import MoveGridItemFocusError, MoveGridFocusError
 from splitter import split_image
 
 class QImageLabel(QLabel):
+
+    # signals
+    clicked = pyqtSignal()
+
     def __init__(self, imgPath=None):
         super().__init__()
 
@@ -52,8 +56,13 @@ class QImageLabel(QLabel):
     def clearHighlight(self):
         self.setProperty('highlighted', False)
 
+    def mouseReleaseEvent(self, event):
+        self.clicked.emit()
+
 class QImageGrid(QWidget):
+
     def __init__(self, baseImgPath):
+
         super().__init__()
         self.baseImgPath = baseImgPath
 
@@ -105,6 +114,11 @@ class QImageGrid(QWidget):
 
     def getFocusWidget(self):
         return self.getFocusItem().widget()
+
+    def setFocusWidget(self, widget):
+        index = self.gridLayout.indexOf(widget)
+        row, col, _, _ = self.gridLayout.getItemPosition(index)
+        self.setFocusItem(row, col)
 
     def setFocusItem(self, row, col):
         item = self.gridLayout.itemAtPosition(row, col)
@@ -169,9 +183,25 @@ class QImageGrids(QWidget):
         imgGrid.setMinimumHeight(100)
         self.VBoxLayout.addWidget(imgGrid)
 
+        for img in imgGrid.children():
+            if isinstance(img, QImageLabel):
+                img.clicked.connect(self.imageClicked)
+
     def getFocusedGrid(self) -> QImageGrid:
         imgGridItem = self.VBoxLayout.itemAt(self._focusItemIndex)
         return imgGridItem.widget()
+
+    @pyqtSlot()
+    def imageClicked(self):
+
+        # clear the currently selected image
+        self.getFocusedGrid().clearFocusItem()
+
+        # focus on the new image
+        imgLabel = self.sender()
+        self._focusItemIndex = self.VBoxLayout.indexOf(imgLabel.parent())
+        self.getFocusedGrid().setFocusWidget(imgLabel)
+        imgLabel.clicked.connect(self.emitFocusChanged)
 
     def emitFocusChanged(self):
         imgPath = self.getFocusedGrid().getFocusWidget().imgPath
@@ -255,10 +285,13 @@ class QImageGrids(QWidget):
 
 
 class QImageGridViewer(QScrollArea):
+
     def __init__(self):
+
         super().__init__()
 
         self.imageGrids = QImageGrids()
+        self.imageGrids.focusChanged.connect(self.focusChangedSlot)
 
         self.setBackgroundRole(QPalette.Dark)
         self.setWidget(self.imageGrids)
@@ -289,22 +322,19 @@ class QImageGridViewer(QScrollArea):
     def ensureFocusedItemVisible(self):
         self.ensureWidgetVisible(self.imageGrids.getFocusedGrid().getFocusWidget())
 
-    def moveFocusDown(self):
-        self.imageGrids.moveItemFocusDown()
+    @pyqtSlot()
+    def focusChangedSlot(self):
         self.readStyleSheet()
         self.ensureFocusedItemVisible()
+
+    def moveFocusDown(self):
+        self.imageGrids.moveItemFocusDown()
 
     def moveFocusUp(self):
         self.imageGrids.moveItemFocusUp()
-        self.readStyleSheet()
-        self.ensureFocusedItemVisible()
 
     def moveFocusLeft(self):
         self.imageGrids.moveItemFocusLeft()
-        self.readStyleSheet()
-        self.ensureFocusedItemVisible()
 
     def moveFocusRight(self):
         self.imageGrids.moveItemFocusRight()
-        self.readStyleSheet()
-        self.ensureFocusedItemVisible()
