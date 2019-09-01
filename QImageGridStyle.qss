@@ -23,7 +23,7 @@ QImageGrids {
      margin: 0 2px 0 0;
  }
  QScrollBar::handle:vertical {
-     background: rgb(41, 41, 41);
+     background: rgb(99, 99, 99);
      min-height: 20px;
      border-radius: 4px;
  }
@@ -50,5 +50,43 @@ QImageGrids {
  }
 
  QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+     background: none;
+ }
+
+
+  QScrollBar:horizontal {
+     border: 0px solid grey;
+     background: transparent;
+     height: 10px;
+     margin: 0 0 2px 0;
+ }
+ QScrollBar::handle:horizontal {
+     background: rgb(99, 99, 99);
+     min-width: 20px;
+     border-radius: 4px;
+ }
+ QScrollBar::add-line:horizontal {
+     border: 0px solid grey;
+     background: #32CC99;
+     width: 0px;
+     subcontrol-position: right;
+     subcontrol-origin: margin;
+ }
+
+ QScrollBar::sub-line:horizontal {
+     border: 0px solid grey;
+     background: #32CC99;
+     width: 0px;
+     subcontrol-position: left;
+     subcontrol-origin: margin;
+ }
+ QScrollBar::up-arrow:horizontal, QScrollBar::down-arrow:horizontal {
+     border: 0px solid grey;
+     width: 0px;
+     height: 0px;
+     background: white;
+ }
+
+ QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
      background: none;
  }

@@ -1,17 +1,17 @@
 from pathlib import Path
 
 from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtGui import QKeySequence
+from PyQt5.QtGui import QKeySequence, QIcon
 from PyQt5.QtWidgets import (
     QMessageBox, QMainWindow, QShortcut,
     QMenu, QAction, qApp
 )
 
-
 from QImageGrid import QImageGridViewer
 from QImagePainter import QImagePainter
 
 class QGameCounter(QMainWindow):
+
     def __init__(self):
         super().__init__()
 
@@ -28,6 +28,7 @@ class QGameCounter(QMainWindow):
         self.createMenus()
 
         self.setWindowTitle('Image Grid Viewer and Painter')
+        self.setWindowIcon(QIcon('./icons/mainWindowIcon.png'))
         self.resize(800, 500)
 
     @pyqtSlot(Path)
@@ -38,7 +39,7 @@ class QGameCounter(QMainWindow):
     def resizeEvent(self, event):
         '''Reimplementing the resize event for the main window'''
         self.imageGridViewer.move(self.width() - 300, 20)
-        self.imageGridViewer.resize(300, self.height() - 20)
+        self.imageGridViewer.resize(300, self.height() * 4/5)
 
     def updateImageGridVisibility(self):
         if self.imageGridsToggle.isChecked():

@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QFile, QTextStream
 from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter
 from PyQt5.QtWidgets import (
     QLabel, QSizePolicy, QScrollArea, QMessageBox, QMainWindow, QMenu,
@@ -21,6 +21,15 @@ class QImagePainter(QScrollArea):
         self.setWidgetResizable(False)
 
         self.createActions()
+        
+        self.stylesheetPath = './QImageGridStyle.qss'
+        self.readStyleSheet()
+
+    def readStyleSheet(self):
+        f = QFile(self.stylesheetPath)
+        f.open(QFile.ReadOnly | QFile.Text)
+        stream = QTextStream(f)
+        self.setStyleSheet(stream.readAll())
 
     def open(self):
         options = QFileDialog.Options()
