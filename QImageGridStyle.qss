@@ -1,0 +1,54 @@
+QImageLabel {
+    border: 3px solid transparent;
+    margin: 0;
+    padding: 0;
+}
+
+QImageLabel[highlighted="true"] {
+    border: 3px solid rgb(17, 150, 194);
+}
+
+QScrollArea {
+    background-color: rgb(0, 0, 0, 150);
+}
+
+QImageGrids {
+    background-color: transparent;
+}
+
+ QScrollBar:vertical {
+     border: 0px solid grey;
+     background: transparent;
+     width: 10px;
+     margin: 0 2px 0 0;
+ }
+ QScrollBar::handle:vertical {
+     background: rgb(41, 41, 41);
+     min-height: 20px;
+     border-radius: 4px;
+ }
+ QScrollBar::add-line:vertical {
+     border: 0px solid grey;
+     background: #32CC99;
+     height: 0px;
+     subcontrol-position: bottom;
+     subcontrol-origin: margin;
+ }
+
+ QScrollBar::sub-line:vertical {
+     border: 0px solid grey;
+     background: #32CC99;
+     height: 0px;
+     subcontrol-position: top;
+     subcontrol-origin: margin;
+ }
+ QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+     border: 0px solid grey;
+     width: 0px;
+     height: 0px;
+     background: white;
+ }
+
+ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+     background: none;
+ }
