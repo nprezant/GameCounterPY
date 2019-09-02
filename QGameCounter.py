@@ -27,6 +27,7 @@ class QGameCounter(QMainWindow):
         self.createConnections()
         self.createActions()
         self.createMenus()
+        self.createToolbars()
 
         self.setWindowTitle('Image Grid Viewer and Painter')
         self.setWindowIcon(QIcon('./icons/mainWindowIcon.png'))
@@ -88,10 +89,6 @@ class QGameCounter(QMainWindow):
         self.viewMenu.addAction(self.itemFocusLeftAct)
         self.viewMenu.addAction(self.itemFocusRightAct)
         self.viewMenu.addSeparator()
-        # self.viewMenu.addAction(self.imagePainter.zoomInAct)
-        # self.viewMenu.addAction(self.imagePainter.zoomOutAct)
-        # self.viewMenu.addAction(self.imagePainter.fitSizeAct)
-        self.viewMenu.addSeparator()
         self.viewMenu.addAction(self.imageGridsToggle)
 
         self.helpMenu = QMenu('&Help', self)
@@ -101,6 +98,9 @@ class QGameCounter(QMainWindow):
         self.menuBar().addMenu(self.fileMenu)
         self.menuBar().addMenu(self.viewMenu)
         self.menuBar().addMenu(self.helpMenu)
+
+    def createToolbars(self):
+        self.addToolBar(Qt.LeftToolBarArea, self.imagePainter.toolbar)
 
 
 if __name__ == '__main__':
