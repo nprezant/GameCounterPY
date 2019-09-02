@@ -308,13 +308,14 @@ class QImageGridViewer(QScrollArea):
 
     def open(self):
         options = QFileDialog.Options()
-        fileName, _ = QFileDialog.getOpenFileName(self, 
-            'QFileDialog.getOpenFileName()', '',
+        fileNames, _ = QFileDialog.getOpenFileNames(self, 
+            'QFileDialog.getOpenFileNames()', '',
             'Images (*.png *.jpeg *.jpg *.bmp *.gif)',
             options=options)
 
-        if fileName:
-            self.openFile(fileName)
+        if fileNames:
+            for fileName in fileNames:
+                self.openFile(fileName)
 
     def openFile(self, fileName):
         self.imageGrids.add(Path(fileName))
