@@ -1,97 +1,45 @@
-from PyQt5.QtCore import Qt, QFile, QTextStream
-from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter
+from PyQt5.QtCore import Qt, QRectF
+from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter, QWheelEvent, QKeyEvent
 from PyQt5.QtWidgets import (
-    QLabel, QSizePolicy, QScrollArea, QMessageBox, QMainWindow, QMenu,
-    QAction, qApp, QFileDialog, QWidget
+    QGraphicsView, QGraphicsScene, QGraphicsItem
 )
 
-from QImageGrid import QImageLabel
-
-
-class QImagePainter(QScrollArea):
+class QImagePainter(QGraphicsView):
     def __init__(self):
         super().__init__()
 
-        self.scaleFactor = 0.0
+        self.scene = QGraphicsScene(self)
+        self.setScene(self.scene)
+        self.setRenderHint(QPainter.Antialiasing)
 
-        self.imageLabel = QImageLabel()
-        self.setWidget(self.imageLabel)
+        self.mainPixmapItem = self.scene.addPixmap(QPixmap())
 
-        self.setBackgroundRole(QPalette.Dark)
-        self.setWidgetResizable(False)
+    def setMainPixmapFromPath(self, imgPath):
+        image = QImage(str(imgPath))
+        pixmap = self.mainPixmapItem.pixmap()
+        pixmap.convertFromImage(image)
+        self.mainPixmapItem.setPixmap(pixmap)
 
-        self.createActions()
-        
-        self.stylesheetPath = './QImageGridStyle.qss'
-        self.readStyleSheet()
+    def wheelEvent(self, event: QWheelEvent):
+        self.scaleView(2 ** float(event.angleDelta().y()/240))
 
-    def readStyleSheet(self):
-        f = QFile(self.stylesheetPath)
-        f.open(QFile.ReadOnly | QFile.Text)
-        stream = QTextStream(f)
-        self.setStyleSheet(stream.readAll())
-
-    def open(self):
-        options = QFileDialog.Options()
-        fileName, _ = QFileDialog.getOpenFileName(self, 'QFileDialog.getOpenFileName()', '',
-                                                  'Images (*.png *.jpeg *.jpg *.bmp *.gif)', options=options)
-        if fileName:
-            self.openFile(fileName)
-
-    def openFile(self, fileName):
-        self.imageLabel.imgPath = fileName
-        self.imageLabel.readImage()
-        self.fitSize()
-
-    def fitSize(self):
-        try:
-            self.imageLabel.resize(self.width() - 5, self.width() * self.imageLabel.originalAR - 5)
-            self.scaleFactor = self.imageLabel.width() / self.imageLabel.originalSize.width()
-        except:
-            pass
-        finally:
-            self.centerImage()
-
-    def centerImage(self):
-        self.setAlignment(Qt.AlignCenter)
-
-    def zoomIn(self):
-        self.scaleImage(1.25)
-
-    def zoomOut(self):
-        self.scaleImage(0.8)
-
-    def normalSize(self):
-        self.imageLabel.adjustSize()
-        self.scaleFactor = 1.0
-
-    def createActions(self):
-        self.zoomInAct = QAction("Zoom &In (25%)", self, shortcut=Qt.Key_I, triggered=self.zoomIn)
-        self.zoomOutAct = QAction("Zoom &Out (25%)", self, shortcut=Qt.Key_O, triggered=self.zoomOut)
-        self.fitSizeAct = QAction("Fit Size", self, shortcut=Qt.Key_Space, triggered=self.fitSize)
-
-    def scaleImage(self, factor):
-        oldFactor = self.scaleFactor
-        self.scaleFactor *= factor
-
-        try:
-            self.imageLabel.resize(self.scaleFactor * self.imageLabel.pixmap().size())
-        except AttributeError:
-            self.scaleFactor = oldFactor
+    def keyPressEvent(self, event: QKeyEvent):
+        key = event.key()
+        if key == Qt.Key_Up:
+            self.mainPixmapItem.moveBy(0,-10)
+        elif key == Qt.Key_Down:
+            self.mainPixmapItem.moveBy(0,10)
+        elif key == Qt.Key_Left:
+            self.mainPixmapItem.moveBy(-10,0)
+        elif key == Qt.Key_Right:
+            self.mainPixmapItem.moveBy(10,0)
         else:
-            self.adjustScrollBar(self.horizontalScrollBar(), factor)
-            self.adjustScrollBar(self.verticalScrollBar(), factor)
+            QGraphicsView().keyPressEvent(event)
 
-    def adjustScrollBar(self, scrollBar, factor):
-        scrollBar.setValue(int(factor * scrollBar.value()
-                               + ((factor - 1) * scrollBar.pageStep() / 2)))
+    def scaleView(self, scaleFactor):
+        factor = self.transform().scale(scaleFactor, scaleFactor).mapRect(QRectF(0, 0, 1, 1)).width()
+        if (factor < 0.07 or factor > 100):
+            return
 
+        self.scale(scaleFactor, scaleFactor)
 
-if __name__ == '__main__':
-    import sys
-    from PyQt5.QtWidgets import QApplication
-
-    app = QApplication(sys.argv)
-    imageViewer = QImagePainter()
-    imageViewer.show()
-    sys.exit(app.exec_())

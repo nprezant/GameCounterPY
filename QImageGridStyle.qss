@@ -10,6 +10,7 @@ QImageLabel[highlighted="true"] {
 
 QScrollArea {
     background-color: rgb(0, 0, 0, 150);
+    border: none;
 }
 
 QImageGrids {
@@ -23,7 +24,7 @@ QImageGrids {
      margin: 0 2px 0 0;
  }
  QScrollBar::handle:vertical {
-     background: rgb(99, 99, 99);
+     background: rgb(40,40,40);
      min-height: 20px;
      border-radius: 4px;
  }

@@ -75,8 +75,8 @@ class QImageGrid(QWidget):
 
         # options
         self.splitDir = self.baseImgPath.parent / Path('split')
-        self.rows = 3
-        self.cols = 3
+        self.rows = 4
+        self.cols = 4
 
         # defaults
         self._focusItemRow = 0

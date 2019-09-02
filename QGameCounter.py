@@ -1,10 +1,11 @@
 from pathlib import Path
 
 from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtGui import QKeySequence, QIcon
+from PyQt5.QtGui import QKeySequence, QIcon, QImage, QPixmap
 from PyQt5.QtWidgets import (
     QMessageBox, QMainWindow, QShortcut,
-    QMenu, QAction, qApp
+    QMenu, QAction, qApp,
+    QGraphicsScene, QGraphicsView, QGraphicsItem
 )
 
 from QImageGrid import QImageGridViewer
@@ -17,8 +18,8 @@ class QGameCounter(QMainWindow):
 
         self.imageGridViewer = QImageGridViewer()
         self.imageGridViewer.setParent(self)
-        self.imagePainter = QImagePainter()
 
+        self.imagePainter = QImagePainter()
         self.setCentralWidget(self.imagePainter)
 
         self.imageGridViewer.raise_()
@@ -34,12 +35,12 @@ class QGameCounter(QMainWindow):
     @pyqtSlot(Path)
     def changeMainImage(self, newPath):
         print(f'Hi. {newPath}')
-        self.imagePainter.openFile(str(newPath))
+        self.imagePainter.setMainPixmapFromPath(newPath)
 
     def resizeEvent(self, event):
         '''Reimplementing the resize event for the main window'''
-        self.imageGridViewer.move(self.width() - 300, 20)
-        self.imageGridViewer.resize(300, self.height() * 4/5)
+        self.imageGridViewer.move(self.width() - 300, self.height() * 2/5)
+        self.imageGridViewer.resize(300, self.height() * 3/5)
 
     def updateImageGridVisibility(self):
         if self.imageGridsToggle.isChecked():
@@ -87,9 +88,9 @@ class QGameCounter(QMainWindow):
         self.viewMenu.addAction(self.itemFocusLeftAct)
         self.viewMenu.addAction(self.itemFocusRightAct)
         self.viewMenu.addSeparator()
-        self.viewMenu.addAction(self.imagePainter.zoomInAct)
-        self.viewMenu.addAction(self.imagePainter.zoomOutAct)
-        self.viewMenu.addAction(self.imagePainter.fitSizeAct)
+        # self.viewMenu.addAction(self.imagePainter.zoomInAct)
+        # self.viewMenu.addAction(self.imagePainter.zoomOutAct)
+        # self.viewMenu.addAction(self.imagePainter.fitSizeAct)
         self.viewMenu.addSeparator()
         self.viewMenu.addAction(self.imageGridsToggle)
 
