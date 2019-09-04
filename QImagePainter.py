@@ -27,7 +27,7 @@ class QImagePainter(QGraphicsView):
         self.initToolbar()
 
         self._pen = QPen(QColor(50, 150, 230))
-        self._pen.setWidth(3)
+        self._pen.setWidth(10)
 
         self._drawStartPos = None
         self._dynamicOval = None
@@ -43,15 +43,23 @@ class QImagePainter(QGraphicsView):
 
         # set scene rect
         boundingRect = self.mainPixmapItem.boundingRect()
-        margin = 2000
+        margin = boundingRect.width() * 2
         boundingRect += QMarginsF(margin,margin,margin,margin)
         self.scene.setSceneRect(boundingRect)
 
-        # center on image
+        # manage view
+        self.bestFitImage()
+
+    def centerImage(self):
         self.centerOn(self.mainPixmapItem)
 
+    def bestFitImage(self):
+        self.fitInView(self.mainPixmapItem, Qt.KeepAspectRatio)
+        # self.centerImage()
+
     def wheelEvent(self, event: QWheelEvent):
-        self.scaleView(2 ** float(-event.angleDelta().y()/280))
+        scaleFactor = 2 ** float(-event.angleDelta().y()/280)
+        self.scaleView(scaleFactor)
 
     def keyPressEvent(self, event: QKeyEvent):
         key = event.key()
@@ -64,9 +72,9 @@ class QImagePainter(QGraphicsView):
         elif key == Qt.Key_Right:
             self.translateHorizontal(10)
         elif key == Qt.Key_Space:
-            self.centerOn(self.mainPixmapItem)
+            self.bestFitImage()
         else:
-            QGraphicsView().keyPressEvent(event)
+            super().keyPressEvent(event)
 
     def translateVertical(self, dy):
         bar = self.verticalScrollBar()

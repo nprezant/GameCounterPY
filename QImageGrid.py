@@ -1,10 +1,10 @@
 from pathlib import Path
 
 from PyQt5.QtCore import Qt, QSize, QFile, QTextStream, pyqtSignal, pyqtSlot, QObject
-from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter
+from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter, QKeyEvent
 from PyQt5.QtWidgets import (
-    QLabel, QSizePolicy, QScrollArea,
-    QFileDialog, QWidget, QGridLayout, QVBoxLayout
+    QLabel, QSizePolicy, QScrollArea, QMainWindow,
+    QFileDialog, QWidget, QGridLayout, QVBoxLayout, QMessageBox
 )
 
 from QImageGridErrors import MoveGridItemFocusError, MoveGridFocusError
@@ -24,7 +24,7 @@ class QImageLabel(QLabel):
         self.setBackgroundRole(QPalette.Base)
         self.setScaledContents(True)
 
-        sizePolicy = QSizePolicy(QSizePolicy.MinimumExpanding, QSizePolicy.MinimumExpanding)
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         sizePolicy.setHeightForWidth(True)
         self.setSizePolicy(sizePolicy)
 
@@ -75,8 +75,8 @@ class QImageGrid(QWidget):
 
         # options
         self.splitDir = self.baseImgPath.parent / Path('split')
-        self.rows = 4
-        self.cols = 4
+        self.rows = 2
+        self.cols = 2
 
         # defaults
         self._focusItemRow = 0
@@ -90,13 +90,10 @@ class QImageGrid(QWidget):
         imgPaths = split_image(self.baseImgPath, self.splitDir, self.rows, self.cols)
 
         # read in pieces
-        for imgPath in imgPaths:
-            row = int(imgPath.stem[-2])
-            col = int(imgPath.stem[-1])
-
-            imageLabel = QImageLabel(imgPath)
-
-            self.gridLayout.addWidget(imageLabel, row, col)
+        for row, imgRow in enumerate(imgPaths):
+            for col, imgPath in enumerate(imgRow):
+                imageLabel = QImageLabel(imgPath)
+                self.gridLayout.addWidget(imageLabel, row, col)
 
     def clearFocusItem(self):
         widget = self.getFocusWidget()
@@ -180,7 +177,7 @@ class QImageGrids(QWidget):
         
     def add(self, imgPath):
         imgGrid = QImageGrid(imgPath)
-        imgGrid.setMinimumHeight(100)
+        # imgGrid.setMinimumHeight(100)
         self.VBoxLayout.addWidget(imgGrid)
 
         for img in imgGrid.children():
@@ -189,7 +186,10 @@ class QImageGrids(QWidget):
 
     def getFocusedGrid(self) -> QImageGrid:
         imgGridItem = self.VBoxLayout.itemAt(self._focusItemIndex)
-        return imgGridItem.widget()
+        if imgGridItem is None:
+            return None
+        else:
+            return imgGridItem.widget()
 
     @pyqtSlot()
     def imageClicked(self):
@@ -319,6 +319,22 @@ class QImageGridViewer(QScrollArea):
 
     def openFile(self, fileName):
         self.imageGrids.add(Path(fileName))
+
+    def focusLastGrid(self):
+        oldGrid = self.imageGrids.getFocusedGrid()
+
+        if oldGrid is None:
+            return
+
+        oldGrid.clearFocusItem()
+
+        self.imageGrids._focusItemIndex = self.imageGrids.VBoxLayout.count() - 1
+        newGrid = self.imageGrids.getFocusedGrid()
+        newGrid.setFocusItem(0, 0)
+        self.imageGrids.emitFocusChanged()
+
+    def keyPressEvent(self, event: QKeyEvent):
+        QMainWindow().keyPressEvent(event)
 
     def ensureFocusedItemVisible(self):
         self.ensureWidgetVisible(self.imageGrids.getFocusedGrid().getFocusWidget())

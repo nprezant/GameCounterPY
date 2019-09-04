@@ -1,11 +1,12 @@
 from pathlib import Path
 
 from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtGui import QKeySequence, QIcon, QImage, QPixmap
+from PyQt5.QtGui import QKeySequence, QIcon, QImage, QPixmap, QKeyEvent
 from PyQt5.QtWidgets import (
     QMessageBox, QMainWindow, QShortcut,
     QMenu, QAction, qApp,
-    QGraphicsScene, QGraphicsView, QGraphicsItem
+    QGraphicsScene, QGraphicsView, QGraphicsItem,
+    QDockWidget, QWidget
 )
 
 from QImageGrid import QImageGridViewer
@@ -17,12 +18,15 @@ class QGameCounter(QMainWindow):
         super().__init__()
 
         self.imageGridViewer = QImageGridViewer()
-        self.imageGridViewer.setParent(self)
-
         self.imagePainter = QImagePainter()
+
         self.setCentralWidget(self.imagePainter)
 
-        self.imageGridViewer.raise_()
+        self.imageGridDock = QDockWidget('Grid Viewer', self)
+        self.imageGridDock.setAllowedAreas(Qt.RightDockWidgetArea)
+        self.imageGridDock.setWidget(self.imageGridViewer)
+        self.imageGridDock.setTitleBarWidget(QWidget())
+        self.addDockWidget(Qt.RightDockWidgetArea, self.imageGridDock)
 
         self.createConnections()
         self.createActions()
@@ -40,8 +44,9 @@ class QGameCounter(QMainWindow):
 
     def resizeEvent(self, event):
         '''Reimplementing the resize event for the main window'''
-        self.imageGridViewer.move(self.width() - 300, self.height() * 2/5)
-        self.imageGridViewer.resize(300, self.height() * 3/5)
+        # self.imageGridViewer.move(self.width() - 300, self.height() * 2/5)
+        # self.imageGridViewer.resize(300, self.height() * 3/5)
+        pass
 
     def updateImageGridVisibility(self):
         if self.imageGridsToggle.isChecked():
@@ -51,6 +56,8 @@ class QGameCounter(QMainWindow):
 
     def open(self):
         self.imageGridViewer.open()
+        self.imageGridViewer.focusLastGrid()
+        self.imagePainter.centerImage()
 
     def openFile(self, fileName):
         self.imageGridViewer.openFile(fileName)
@@ -60,6 +67,13 @@ class QGameCounter(QMainWindow):
             'About Image Grid Viewer',
             '<p>The <b>Image Grid Viewer</b> displays images in a nice '
             'scrolling grid.</p>')
+
+    def keyPressEvent(self, event: QKeyEvent):
+        key = event.key()
+        if key in (Qt.Key_Up, Qt.Key_Down, Qt.Key_Left, Qt.Key_Right, Qt.Key_Space):
+            self.imagePainter.keyPressEvent(event)
+        else:
+            super().keyPressEvent(event)
 
     def createConnections(self):
         self.imageGridViewer.imageGrids.focusChanged.connect(self.changeMainImage)
@@ -75,7 +89,8 @@ class QGameCounter(QMainWindow):
         self.itemFocusLeftAct = QAction('Left Item', self, shortcut=Qt.CTRL + Qt.Key_Left, triggered=self.imageGridViewer.moveFocusLeft)
         self.itemFocusRightAct = QAction('Right Item', self, shortcut=Qt.CTRL + Qt.Key_Right, triggered=self.imageGridViewer.moveFocusRight)
 
-        self.imageGridsToggle = QAction('View Grids', self, checkable=True, checked=True, shortcut=Qt.CTRL + Qt.Key_I, triggered=self.updateImageGridVisibility)
+        self.imageGridsToggle = self.imageGridDock.toggleViewAction()
+        self.imageGridsToggle.setShortcut(Qt.CTRL + Qt.Key_G)
 
     def createMenus(self):
         self.fileMenu = QMenu('&File', self)
@@ -110,8 +125,8 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     imageViewer = QGameCounter()
     imageViewer.show()
-    imageViewer.openFile(r'.\transect\bikes.jpg')
-    imageViewer.openFile(r'.\transect\fine.jpeg')
-    imageViewer.openFile(r'.\transect\bikes.jpg')
-    imageViewer.openFile(r'.\transect\fine.jpeg')
+    # imageViewer.openFile(r'.\transect\bikes.jpg')
+    # imageViewer.openFile(r'.\transect\fine.jpeg')
+    # imageViewer.openFile(r'.\transect\bikes.jpg')
+    # imageViewer.openFile(r'.\transect\fine.jpeg')
     sys.exit(app.exec_())
