@@ -1,7 +1,8 @@
 from PyQt5.QtCore import Qt, QRectF, QMarginsF, QTimeLine
 from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter, QWheelEvent, QKeyEvent, QIcon, QPen, QColor
 from PyQt5.QtWidgets import (
-    QGraphicsView, QGraphicsScene, QGraphicsItem, QToolBar, QAction
+    QGraphicsView, QGraphicsScene, QGraphicsItem, QToolBar, QAction,
+    QApplication
 )
 
 class QSmoothGraphicsView(QGraphicsView):
@@ -29,20 +30,12 @@ class QSmoothGraphicsView(QGraphicsView):
             self.translateHorizontalEvent(-100)
         elif key == Qt.Key_Right:
             self.translateHorizontalEvent(100)
-        elif key == Qt.Key_Control:
-            self.controlDown = True
-            super().keyPressEvent(event)
         else:
             super().keyPressEvent(event)
 
-    def keyReleaseEvent(self, event: QKeyEvent):
-        key = event.key()
-        if key == Qt.Key_Control:
-            self.controlDown = False
-        super().keyReleaseEvent(event)
-
     def wheelEvent(self, event: QWheelEvent):
-        if self.controlDown:
+        modifiers = QApplication.keyboardModifiers()
+        if modifiers == Qt.ControlModifier:
             self.zoom(event.angleDelta().y() / 8)
         else:
             super().wheelEvent(event)
