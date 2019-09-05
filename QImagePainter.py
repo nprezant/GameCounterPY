@@ -30,7 +30,6 @@ class QSmoothGraphicsView(QGraphicsView):
         elif key == Qt.Key_Right:
             self.translateHorizontalEvent(100)
         elif key == Qt.Key_Control:
-            print('control is down')
             self.controlDown = True
             super().keyPressEvent(event)
         else:
@@ -39,12 +38,10 @@ class QSmoothGraphicsView(QGraphicsView):
     def keyReleaseEvent(self, event: QKeyEvent):
         key = event.key()
         if key == Qt.Key_Control:
-            print('control is up')
             self.controlDown = False
         super().keyReleaseEvent(event)
 
     def wheelEvent(self, event: QWheelEvent):
-        print(self.controlDown)
         if self.controlDown:
             self.zoom(event.angleDelta().y() / 8)
         else:
@@ -100,9 +97,9 @@ class QSmoothGraphicsView(QGraphicsView):
 
     def translateHTime(self, x):
         if self._numScheduledHTranslations > 0:
-            dx = 0.75
+            dx = 1
         else:
-            dx = -0.75
+            dx = -1
         self.translateHorizontal(dx)
 
     def translateHAnimFinished(self):
@@ -114,7 +111,7 @@ class QSmoothGraphicsView(QGraphicsView):
         self.animatingH = False
 
     def translateVerticalEvent(self, dy):
-        numSteps = dy * 2
+        numSteps = dy * 1
         self._numScheduledVTranslations += numSteps
 
         if (self._numScheduledVTranslations * numSteps < 0): # if user moved the wheel in another direction, we reset previously scheduled scalings
@@ -130,9 +127,9 @@ class QSmoothGraphicsView(QGraphicsView):
 
     def translateVTime(self, y):
         if self._numScheduledVTranslations > 0:
-            dy = 0.75
+            dy = 1
         else:
-            dy = -0.75
+            dy = -1
         self.translateVertical(dy)
 
     def translateVAnimFinished(self):
