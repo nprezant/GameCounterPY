@@ -39,9 +39,8 @@ class QGameCounter(QMainWindow):
 
     @pyqtSlot(QPixmap)
     def changeMainImage(self, newPixmap):
-        # print(f'Hi. {newPath}')
-        # self.imagePainter.setMainPixmapFromPath(newPath)
         self.imagePainter.setMainPixmap(newPixmap)
+        self.imagePainter.bestFitImage()
 
     def updateImageGridVisibility(self):
         if self.imageGridsToggle.isChecked():
@@ -72,6 +71,8 @@ class QGameCounter(QMainWindow):
 
     def createConnections(self):
         self.imageGridViewer.imageGrids.focusChanged.connect(self.changeMainImage)
+        self.imageGridViewer.imageGrids.focusChanged.connect(self.imagePainter.clearDrawnItems)
+        self.imagePainter.imageFlattened.connect(self.imageGridViewer.changeFocusedImageData)
 
     def createActions(self):
         self.openAct = QAction('&Open...', self, shortcut='Ctrl+O', triggered=self.open)
@@ -121,7 +122,5 @@ if __name__ == '__main__':
     imageViewer = QGameCounter()
     imageViewer.show()
     imageViewer.openFile(r'.\transect\InkedDSC02010_LI.jpg')
-    # imageViewer.openFile(r'.\transect\fine.jpeg')
-    # imageViewer.openFile(r'.\transect\bikes.jpg')
-    # imageViewer.openFile(r'.\transect\fine.jpeg')
+    imageViewer.openFile(r'.\transect\InkedDSC02012_LI.jpg')
     sys.exit(app.exec_())

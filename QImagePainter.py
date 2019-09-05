@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QRectF, QMarginsF, QTimeLine
+from PyQt5.QtCore import Qt, QRectF, QMarginsF, QTimeLine, pyqtSignal
 from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter, QWheelEvent, QKeyEvent, QIcon, QPen, QColor
 from PyQt5.QtWidgets import (
     QGraphicsView, QGraphicsScene, QGraphicsItem, QToolBar, QAction,
@@ -82,7 +82,7 @@ class QSmoothGraphicsView(QGraphicsView):
 
         if not self.animatingH:
             anim = QTimeLine(350, self)
-            anim.setUpdateInterval(20)
+            anim.setUpdateInterval(10)
 
             anim.valueChanged.connect(self.translateHTime)
             anim.finished.connect(self.translateHAnimFinished)
@@ -112,7 +112,7 @@ class QSmoothGraphicsView(QGraphicsView):
 
         if not self.animatingV:
             anim = QTimeLine(350, self)
-            anim.setUpdateInterval(20)
+            anim.setUpdateInterval(10)
 
             anim.valueChanged.connect(self.translateVTime)
             anim.finished.connect(self.translateVAnimFinished)
@@ -142,6 +142,10 @@ class QSmoothGraphicsView(QGraphicsView):
     
 
 class QImagePainter(QSmoothGraphicsView):
+
+    # signals
+    imageFlattened = pyqtSignal(QImage)
+
     def __init__(self):
         super().__init__()
 
@@ -161,7 +165,7 @@ class QImagePainter(QSmoothGraphicsView):
         self.initToolbar()
 
         self._pen = QPen(QColor(50, 150, 230))
-        self._pen.setWidth(10)
+        self._pen.setWidth(50)
 
         self._drawStartPos = None
         self._dynamicOval = None
@@ -182,28 +186,46 @@ class QImagePainter(QSmoothGraphicsView):
 
         # set scene rect
         boundingRect = self.mainPixmapItem.boundingRect()
-        margin = 100 # boundingRect.width() * 2
+        margin = 0
         boundingRect += QMarginsF(margin,margin,margin,margin)
         self.scene.setSceneRect(boundingRect)
 
-        # manage view
-        self.bestFitImage()
+    def saveImage(self, fileName):
+        image = self.flattenImage()
+        image.save(fileName)
 
-    def saveImage(self):
+    def flattenImage(self):
 
-        # Get region of scene
+        # get region of scene
         area = self.mainPixmapItem.boundingRect()
 
-        # Create a QImage to render to and fix up a QPainter for it
+        # create a QImage to render to and fix up a QPainter for it
         image = QImage(area.width(), area.height(), QImage.Format_ARGB32_Premultiplied)
         painter = QPainter(image)
 
-        # Render the region of interest to the QImage
+        # render the region of interest to the QImage
         self.scene.render(painter, QRectF(image.rect()), area)
         painter.end()
 
-        # Save the image to a file.
-        image.save('./test.png')
+        # set this flattened image to this view
+        pixmap = self.mainPixmapItem.pixmap()
+        pixmap.convertFromImage(image)
+        self.setMainPixmap(pixmap)
+
+        # clear the drawings from the view
+        self.clearDrawnItems()
+
+        # emit flattened image signal
+        self.imageFlattened.emit(image)
+
+        # return the flattened image
+        return image
+
+    def clearDrawnItems(self):
+        for item in self._drawnItems:
+            self.scene.removeItem(item)
+
+        self._drawnItems.clear()
 
     def centerImage(self):
         self.centerOn(self.mainPixmapItem)
@@ -270,11 +292,11 @@ class QImagePainter(QSmoothGraphicsView):
     def createActions(self):
         self.selectionModeAct = QAction(QIcon('./icons/selectIcon.png'), '&Select', self, checkable=True, checked=True, triggered=self.toggleSelectionMode)
         self.ovalModeAct = QAction(QIcon('./icons/ovalIcon.png'), '&Draw Oval', self, checkable=True, checked=False, triggered=self.toggleOvalMode)
-        self.saveAct = QAction(QIcon('./icons/saveIcon.png'), 'Save', self, triggered=self.saveImage)
+        self.flattenAct = QAction(QIcon('./icons/saveIcon.png'), 'Save', self, triggered=self.flattenImage)
 
     def initToolbar(self):
         self.createActions()
-        self.toolbar.addAction(self.saveAct)
+        self.toolbar.addAction(self.flattenAct)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.selectionModeAct)
         self.toolbar.addAction(self.ovalModeAct)

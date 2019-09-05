@@ -39,6 +39,11 @@ class QImageLabel(QLabel):
                 'Image Viewer',
                 f'Cannot load {self.imgPath}')
             return
+        self.setImage(image)
+
+    def setImage(self, image: QImage):
+        # save the image
+        self.image = image
 
         # get the original image size & AR
         self.originalSize = image.size()
@@ -75,8 +80,8 @@ class QImageGrid(QWidget):
 
         # options
         self.splitDir = self.baseImgPath.parent / Path('split')
-        self.rows = 2
-        self.cols = 2
+        self.rows = 1
+        self.cols = 1
 
         # defaults
         self._focusItemRow = 0
@@ -86,23 +91,54 @@ class QImageGrid(QWidget):
         self.readImage()
 
     def readImage(self):
-        # split image
-        imgPaths = split_image(self.baseImgPath, self.splitDir, self.rows, self.cols)
 
-        # read in pieces
-        for row, imgRow in enumerate(imgPaths):
-            for col, imgPath in enumerate(imgRow):
-                imageLabel = QImageLabel(imgPath)
-                self.gridLayout.addWidget(imageLabel, row, col)
+        if self.rows > 1 and self.cols > 1:
+            # split image
+            imgPaths = split_image(self.baseImgPath, self.splitDir, self.rows, self.cols)
+
+            # read in pieces
+            for row, imgRow in enumerate(imgPaths):
+                for col, imgPath in enumerate(imgRow):
+                    imageLabel = QImageLabel(imgPath)
+                    self.gridLayout.addWidget(imageLabel, row, col)
+        
+        else:
+            self.gridLayout.addWidget(QImageLabel(self.baseImgPath), 0, 0)
+
+    def writeImage(self):
+
+        if self.rows > 1 and self.cols > 1:
+            # assumes all images are the same size within a grid
+            width = self.getItemAtPosition(0,0).widget().image.width()
+            height = self.getItemAtPosition(0,0).widget().image.height()
+
+            mergedImage = QImage(width*self.cols, height*self.rows, QImage.Format_RGB32)
+            painter = QPainter(mergedImage)
+
+            for row in range(self.rows):
+                for col in range(self.cols):
+                    widget = self.getItemAtPosition(row, col).widget()
+                    image = widget.image
+                    painter.drawImage(col * width, row * height, image)
+            
+            painter.end()
+
+        else:
+            mergedImage = self.getItemAtPosition(0, 0).widget().image
+
+        # save the merged file
+        savePath = self.baseImgPath.parent / Path(f'{self.baseImgPath.stem}_Inked{self.baseImgPath.suffix}')
+        mergedImage.save(str(savePath))
 
     def clearFocusItem(self):
         widget = self.getFocusWidget()
         widget.clearHighlight()
 
     def getFocusItem(self):
-        item = self.gridLayout.itemAtPosition(
-            self._focusItemRow, self._focusItemColumn
-        )
+        return self.getItemAtPosition(self._focusItemRow, self._focusItemColumn)
+
+    def getItemAtPosition(self, row, col):
+        item = self.gridLayout.itemAtPosition(row, col)
 
         if item is None:
             raise ValueError(f'No item at ({self._focusItemRow}, {self._focusItemColumn}')
@@ -345,6 +381,12 @@ class QImageGridViewer(QScrollArea):
     def focusChangedSlot(self):
         self.readStyleSheet()
         self.ensureFocusedItemVisible()
+
+    @pyqtSlot(QImage)
+    def changeFocusedImageData(self, newImage):
+        widget = self.imageGrids.getFocusedGrid().getFocusWidget()
+        widget.setImage(newImage)
+        self.imageGrids.getFocusedGrid().writeImage()
 
     def moveFocusDown(self):
         self.imageGrids.moveItemFocusDown()
