@@ -357,3 +357,6 @@ class QImageGridViewer(QScrollArea):
 
     def moveFocusRight(self):
         self.imageGrids.moveItemFocusRight()
+
+    def sizeHint(self):
+        return QSize(150,400)
