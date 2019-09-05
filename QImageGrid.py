@@ -171,6 +171,8 @@ class QImageGrids(QWidget):
 
         self.VBoxLayout = QVBoxLayout()
         self.setLayout(self.VBoxLayout)
+        self.VBoxLayout.addStretch()
+        
         self.setBackgroundRole(QPalette.Light)
 
         self._focusItemIndex = 0
@@ -178,7 +180,7 @@ class QImageGrids(QWidget):
     def add(self, imgPath):
         imgGrid = QImageGrid(imgPath)
         # imgGrid.setMinimumHeight(100)
-        self.VBoxLayout.addWidget(imgGrid)
+        self.VBoxLayout.insertWidget(self.VBoxLayout.count()-1, imgGrid)
 
         for img in imgGrid.children():
             if isinstance(img, QImageLabel):
@@ -209,7 +211,7 @@ class QImageGrids(QWidget):
 
     def moveGridFocusDown(self):
         # only shift if we're not already at the bottom
-        if not self._focusItemIndex == self.VBoxLayout.count() - 1:
+        if not self._focusItemIndex == self.VBoxLayout.count() - 2:
             self._focusItemIndex += 1
         else:
             raise MoveGridFocusError(
@@ -328,7 +330,7 @@ class QImageGridViewer(QScrollArea):
 
         oldGrid.clearFocusItem()
 
-        self.imageGrids._focusItemIndex = self.imageGrids.VBoxLayout.count() - 1
+        self.imageGrids._focusItemIndex = self.imageGrids.VBoxLayout.count() - 2
         newGrid = self.imageGrids.getFocusedGrid()
         newGrid.setFocusItem(0, 0)
         self.imageGrids.emitFocusChanged()
