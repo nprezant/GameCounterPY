@@ -37,10 +37,11 @@ class QGameCounter(QMainWindow):
         self.setWindowIcon(QIcon('./icons/mainWindowIcon.png'))
         self.resize(800, 500)
 
-    @pyqtSlot(Path)
-    def changeMainImage(self, newPath):
-        print(f'Hi. {newPath}')
-        self.imagePainter.setMainPixmapFromPath(newPath)
+    @pyqtSlot(QPixmap)
+    def changeMainImage(self, newPixmap):
+        # print(f'Hi. {newPath}')
+        # self.imagePainter.setMainPixmapFromPath(newPath)
+        self.imagePainter.setMainPixmap(newPixmap)
 
     def updateImageGridVisibility(self):
         if self.imageGridsToggle.isChecked():

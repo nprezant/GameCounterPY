@@ -164,7 +164,7 @@ class QImageGrid(QWidget):
 class QImageGrids(QWidget):
 
     # signals
-    focusChanged = pyqtSignal(Path)
+    focusChanged = pyqtSignal(QPixmap)
 
     def __init__(self):
         super().__init__()
@@ -206,8 +206,8 @@ class QImageGrids(QWidget):
         imgLabel.clicked.connect(self.emitFocusChanged)
 
     def emitFocusChanged(self):
-        imgPath = self.getFocusedGrid().getFocusWidget().imgPath
-        self.focusChanged.emit(imgPath)
+        pixmap = self.getFocusedGrid().getFocusWidget().pixmap()
+        self.focusChanged.emit(pixmap)
 
     def moveGridFocusDown(self):
         # only shift if we're not already at the bottom

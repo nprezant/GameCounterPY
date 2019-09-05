@@ -175,6 +175,9 @@ class QImagePainter(QSmoothGraphicsView):
         image = QImage(str(imgPath))
         pixmap = self.mainPixmapItem.pixmap()
         pixmap.convertFromImage(image)
+        self.setMainPixmap(pixmap)
+
+    def setMainPixmap(self, pixmap):
         self.mainPixmapItem.setPixmap(pixmap)
 
         # set scene rect
