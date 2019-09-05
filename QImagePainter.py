@@ -36,9 +36,9 @@ class QSmoothGraphicsView(QGraphicsView):
     def wheelEvent(self, event: QWheelEvent):
         modifiers = QApplication.keyboardModifiers()
         if modifiers == Qt.ControlModifier:
-            self.zoom(event.angleDelta().y() / 8)
-        else:
             super().wheelEvent(event)
+        else:
+            self.zoom(event.angleDelta().y() / 8)
 
     def zoom(self, numDegrees):
         numSteps = numDegrees / 15
@@ -150,7 +150,6 @@ class QImagePainter(QSmoothGraphicsView):
         self.setRenderHint(QPainter.Antialiasing)
 
         self.mainPixmapItem = self.scene.addPixmap(QPixmap())
-        self.setDragMode(QGraphicsView.ScrollHandDrag)
 
         # policies
         # self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
@@ -167,6 +166,8 @@ class QImagePainter(QSmoothGraphicsView):
         self._drawStartPos = None
         self._dynamicOval = None
         self._drawnItems = []
+
+        self.updateDragMode()
 
     def setMainPixmapFromPath(self, imgPath):
 
@@ -185,6 +186,22 @@ class QImagePainter(QSmoothGraphicsView):
         # manage view
         self.bestFitImage()
 
+    def saveImage(self):
+
+        # Get region of scene
+        area = self.mainPixmapItem.boundingRect()
+
+        # Create a QImage to render to and fix up a QPainter for it
+        image = QImage(area.width(), area.height(), QImage.Format_ARGB32_Premultiplied)
+        painter = QPainter(image)
+
+        # Render the region of interest to the QImage
+        self.scene.render(painter, QRectF(image.rect()), area)
+        painter.end()
+
+        # Save the image to a file.
+        image.save('./test.png')
+
     def centerImage(self):
         self.centerOn(self.mainPixmapItem)
 
@@ -197,14 +214,6 @@ class QImagePainter(QSmoothGraphicsView):
             self.bestFitImage()
         else:
             super().keyPressEvent(event)
-
-    # def scaleView(self, scaleFactor):
-    #     rect = self.mainPixmapItem.pixmap().scale(scaleFactor, scaleFactor).mapRect(QRectF(0, 0, 1, 1))
-    #     print(f'width: {rect.width()}')
-    #     print(f'height: {rect.height()}')
-    #     if rect.width() < self.width() \
-    #         or rect.height() < self.height():
-    #         return
 
     def mousePressEvent(self, event):
         self._drawStartPos = None
@@ -240,19 +249,30 @@ class QImagePainter(QSmoothGraphicsView):
             self.ovalModeAct.setChecked(False)
         else:
             self.selectionModeAct.setChecked(True)
+        self.updateDragMode()
 
     def toggleOvalMode(self):
         if self.ovalModeAct.isChecked():
             self.selectionModeAct.setChecked(False)
         else:
             self.ovalModeAct.setChecked(True)
+        self.updateDragMode()
+
+    def updateDragMode(self):
+        if self.selectionModeAct.isChecked():
+            self.setDragMode(QGraphicsView.ScrollHandDrag)
+        else:
+            self.setDragMode(QGraphicsView.NoDrag)
 
     def createActions(self):
         self.selectionModeAct = QAction(QIcon('./icons/selectIcon.png'), '&Select', self, checkable=True, checked=True, triggered=self.toggleSelectionMode)
         self.ovalModeAct = QAction(QIcon('./icons/ovalIcon.png'), '&Draw Oval', self, checkable=True, checked=False, triggered=self.toggleOvalMode)
+        self.saveAct = QAction(QIcon('./icons/saveIcon.png'), 'Save', self, triggered=self.saveImage)
 
     def initToolbar(self):
         self.createActions()
+        self.toolbar.addAction(self.saveAct)
+        self.toolbar.addSeparator()
         self.toolbar.addAction(self.selectionModeAct)
         self.toolbar.addAction(self.ovalModeAct)
 

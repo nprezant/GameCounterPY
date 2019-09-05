@@ -52,13 +52,20 @@ def split_image(img_path, out_directory, rows, cols):
 
     return split_image_paths
 
-def stitch_images(img_paths):
+def stitch_images_from_fp(img_paths):
+    rows = []
+    for img_path_row in img_paths:
+        img_row = map(Image.open, img_path_row)
+        rows.append(img_row)
+
+    return stitch_images(rows)
+
+def stitch_images(images):
     '''Stitches the gridded images back into one'''
     rows = []
 
-    for img_row in img_paths:
-        images = map(Image.open, img_row)
-        combined_row = append_images(images, direction='horizontal')
+    for img_row in images:
+        combined_row = append_images(img_row, direction='horizontal')
         rows.append(combined_row)
 
     return append_images(rows, direction='vertical')

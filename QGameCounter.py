@@ -42,12 +42,6 @@ class QGameCounter(QMainWindow):
         print(f'Hi. {newPath}')
         self.imagePainter.setMainPixmapFromPath(newPath)
 
-    def resizeEvent(self, event):
-        '''Reimplementing the resize event for the main window'''
-        # self.imageGridViewer.move(self.width() - 300, self.height() * 2/5)
-        # self.imageGridViewer.resize(300, self.height() * 3/5)
-        pass
-
     def updateImageGridVisibility(self):
         if self.imageGridsToggle.isChecked():
             self.imageGridViewer.show()
@@ -125,7 +119,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     imageViewer = QGameCounter()
     imageViewer.show()
-    # imageViewer.openFile(r'.\transect\bikes.jpg')
+    imageViewer.openFile(r'.\transect\InkedDSC02010_LI.jpg')
     # imageViewer.openFile(r'.\transect\fine.jpeg')
     # imageViewer.openFile(r'.\transect\bikes.jpg')
     # imageViewer.openFile(r'.\transect\fine.jpeg')
