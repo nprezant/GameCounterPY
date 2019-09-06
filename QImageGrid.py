@@ -1,10 +1,11 @@
 from pathlib import Path
 
 from PyQt5.QtCore import Qt, QSize, QFile, QTextStream, pyqtSignal, pyqtSlot, QObject
-from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter, QKeyEvent
+from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter, QKeyEvent, QIcon
 from PyQt5.QtWidgets import (
     QLabel, QSizePolicy, QScrollArea, QMainWindow,
-    QFileDialog, QWidget, QGridLayout, QVBoxLayout, QMessageBox
+    QFileDialog, QWidget, QGridLayout, QVBoxLayout, QMessageBox,
+    QToolBar, QAction, QMenu
 )
 
 from QImageGridErrors import MoveGridItemFocusError, MoveGridFocusError
@@ -80,24 +81,25 @@ class QImageGrid(QWidget):
 
         # options
         self.splitDir = self.baseImgPath.parent / Path('split')
-        self.rows = 1
-        self.cols = 1
+        self.rows = 2
+        self.cols = 2
 
         # defaults
         self._focusItemRow = 0
         self._focusItemColumn = 0
 
         # read in the image as a grid
+        self.imageGridPaths = None
         self.readImage()
 
     def readImage(self):
 
         if self.rows > 1 and self.cols > 1:
             # split image
-            imgPaths = split_image(self.baseImgPath, self.splitDir, self.rows, self.cols)
+            self.imageGridPaths = split_image(self.baseImgPath, self.splitDir, self.rows, self.cols)
 
             # read in pieces
-            for row, imgRow in enumerate(imgPaths):
+            for row, imgRow in enumerate(self.imageGridPaths):
                 for col, imgPath in enumerate(imgRow):
                     imageLabel = QImageLabel(imgPath)
                     self.gridLayout.addWidget(imageLabel, row, col)
@@ -129,6 +131,11 @@ class QImageGrid(QWidget):
         # save the merged file
         savePath = self.baseImgPath.parent / Path(f'{self.baseImgPath.stem}_Inked{self.baseImgPath.suffix}')
         mergedImage.save(str(savePath))
+
+    def reloadImage(self):
+        for widget in self.findChildren(QImageLabel, options=Qt.FindDirectChildrenOnly):
+            widget.deleteLater()
+        self.readImage()
 
     def clearFocusItem(self):
         widget = self.getFocusWidget()
@@ -218,9 +225,19 @@ class QImageGrids(QWidget):
         # imgGrid.setMinimumHeight(100)
         self.VBoxLayout.insertWidget(self.VBoxLayout.count()-1, imgGrid)
 
-        for img in imgGrid.children():
+        self.connectGridSignals(imgGrid)
+
+    def connectGridSignals(self, grid):
+        # TODO make this happen on a reload of a grid
+        for img in grid.children():
             if isinstance(img, QImageLabel):
                 img.clicked.connect(self.imageClicked)
+
+    def reloadFocusedGrid(self):
+        grid = self.getFocusedGrid()
+        grid.reloadImage()
+        self.connectGridSignals(grid)
+        # self.emitFocusChanged() TODO this causes AttributeError: 'QWidgte' object has no attribute 'pixmap'
 
     def getFocusedGrid(self) -> QImageGrid:
         imgGridItem = self.VBoxLayout.itemAt(self._focusItemIndex)
@@ -338,6 +355,11 @@ class QImageGridViewer(QScrollArea):
         self.stylesheetPath = './QImageGridStyle.qss'
         self.readStyleSheet()
 
+        self.toolbar = QToolBar()
+        self.initToolbar()
+
+        self.initMenu() # makes self.menu
+
     def readStyleSheet(self):
         f = QFile(self.stylesheetPath)
         f.open(QFile.ReadOnly | QFile.Text)
@@ -357,6 +379,9 @@ class QImageGridViewer(QScrollArea):
 
     def openFile(self, fileName):
         self.imageGrids.add(Path(fileName))
+
+    def reloadFocusedImage(self):
+        self.imageGrids.reloadFocusedGrid()
 
     def focusLastGrid(self):
         oldGrid = self.imageGrids.getFocusedGrid()
@@ -402,3 +427,22 @@ class QImageGridViewer(QScrollArea):
 
     def sizeHint(self):
         return QSize(150,400)
+
+    def createActions(self):
+        self.itemFocusDownAct = QAction('Down Item', self, shortcut=Qt.CTRL + Qt.Key_Down, triggered=self.moveFocusDown)
+        self.itemFocusUpAct = QAction('Up Item', self, shortcut=Qt.CTRL + Qt.Key_Up, triggered=self.moveFocusUp)
+        self.itemFocusLeftAct = QAction('Left Item', self, shortcut=Qt.CTRL + Qt.Key_Left, triggered=self.moveFocusLeft)
+        self.itemFocusRightAct = QAction('Right Item', self, shortcut=Qt.CTRL + Qt.Key_Right, triggered=self.moveFocusRight)
+
+        self.resetImageAct = QAction(QIcon('./icons/refreshIcon.png'), 'Reset Image', self, shortcut=Qt.CTRL + Qt.Key_R, triggered=self.reloadFocusedImage)
+
+    def initMenu(self):
+        self.menu = QMenu('Grids', self)
+        self.menu.addAction(self.itemFocusDownAct)
+        self.menu.addAction(self.itemFocusUpAct)
+        self.menu.addAction(self.itemFocusLeftAct)
+        self.menu.addAction(self.itemFocusRightAct)
+
+    def initToolbar(self):
+        self.createActions()
+        self.toolbar.addAction(self.resetImageAct)

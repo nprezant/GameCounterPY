@@ -232,8 +232,16 @@ class QImagePainter(QSmoothGraphicsView):
 
         self._drawnItems.clear()
 
+    def removeLastDrawnItem(self):
+        try:
+            item = self._drawnItems.pop()
+        except IndexError:
+            pass
+        else:
+            self.scene.removeItem(item)
+
     def scaleView(self, scaleFactor):
-        print(f'self.width: {self.width()}')
+        # print(f'self.width: {self.width()}')
         # print(f'pixmap.width(): {self.scene.map.mainPixmapItem.boundingRect().width()}')
         self.scale(scaleFactor, scaleFactor)
 
@@ -303,10 +311,12 @@ class QImagePainter(QSmoothGraphicsView):
         self.selectionModeAct = QAction(QIcon('./icons/selectIcon.png'), '&Select', self, checkable=True, checked=True, shortcut=Qt.Key_V, triggered=self.toggleSelectionMode)
         self.ovalModeAct = QAction(QIcon('./icons/ovalIcon.png'), '&Draw Oval', self, checkable=True, checked=False, shortcut=Qt.Key_O, triggered=self.toggleOvalMode)
         self.flattenAct = QAction(QIcon('./icons/saveIcon.png'), 'Save', self, shortcut=QKeySequence.Save, triggered=self.flattenImage)
+        self.undoAct = QAction(QIcon('./icons/undoIcon.png'), 'Save', self, shortcut=QKeySequence.Undo, triggered=self.removeLastDrawnItem)
 
     def initToolbar(self):
         self.createActions()
         self.toolbar.addAction(self.flattenAct)
+        self.toolbar.addAction(self.undoAct)
         self.toolbar.addSeparator()
         self.toolbar.addAction(self.selectionModeAct)
         self.toolbar.addAction(self.ovalModeAct)

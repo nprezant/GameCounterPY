@@ -80,11 +80,6 @@ class QGameCounter(QMainWindow):
         self.aboutAct = QAction('&About', self, triggered=self.about)
         self.aboutQtAct = QAction('About &Qt', self, triggered=qApp.aboutQt)
 
-        self.itemFocusDownAct = QAction('Down Item', self, shortcut=Qt.CTRL + Qt.Key_Down, triggered=self.imageGridViewer.moveFocusDown)
-        self.itemFocusUpAct = QAction('Up Item', self, shortcut=Qt.CTRL + Qt.Key_Up, triggered=self.imageGridViewer.moveFocusUp)
-        self.itemFocusLeftAct = QAction('Left Item', self, shortcut=Qt.CTRL + Qt.Key_Left, triggered=self.imageGridViewer.moveFocusLeft)
-        self.itemFocusRightAct = QAction('Right Item', self, shortcut=Qt.CTRL + Qt.Key_Right, triggered=self.imageGridViewer.moveFocusRight)
-
         self.imageGridsToggle = self.imageGridDock.toggleViewAction()
         self.imageGridsToggle.setShortcut(Qt.CTRL + Qt.Key_G)
 
@@ -95,10 +90,6 @@ class QGameCounter(QMainWindow):
         self.fileMenu.addAction(self.exitAct)
 
         self.viewMenu = QMenu('&View', self)
-        self.viewMenu.addAction(self.itemFocusDownAct)
-        self.viewMenu.addAction(self.itemFocusUpAct)
-        self.viewMenu.addAction(self.itemFocusLeftAct)
-        self.viewMenu.addAction(self.itemFocusRightAct)
         self.viewMenu.addSeparator()
         self.viewMenu.addAction(self.imageGridsToggle)
 
@@ -108,10 +99,12 @@ class QGameCounter(QMainWindow):
 
         self.menuBar().addMenu(self.fileMenu)
         self.menuBar().addMenu(self.viewMenu)
+        self.menuBar().addMenu(self.imageGridViewer.menu)
         self.menuBar().addMenu(self.helpMenu)
 
     def createToolbars(self):
         self.addToolBar(Qt.LeftToolBarArea, self.imagePainter.toolbar)
+        self.addToolBar(Qt.LeftToolBarArea, self.imageGridViewer.toolbar)
 
 
 if __name__ == '__main__':
@@ -121,6 +114,6 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     imageViewer = QGameCounter()
     imageViewer.show()
-    imageViewer.openFile(r'.\transect\InkedDSC02010_LI.jpg')
-    imageViewer.openFile(r'.\transect\InkedDSC02012_LI.jpg')
+    # imageViewer.openFile(r'.\transect\InkedDSC02010_LI.jpg')
+    # imageViewer.openFile(r'.\transect\InkedDSC02012_LI.jpg')
     sys.exit(app.exec_())
