@@ -10,17 +10,15 @@ from PyQt5.QtWidgets import (
 
 from QImageGridErrors import MoveGridItemFocusError, MoveGridFocusError
 
-from splitter import split_image
-
 class QImageLabel(QLabel):
 
     # signals
     clicked = pyqtSignal()
 
-    def __init__(self, imgPath=None):
+    def __init__(self):
         super().__init__()
 
-        self.imgPath = imgPath
+        self.imgPath = None
 
         self.setBackgroundRole(QPalette.Base)
         self.setScaledContents(True)
@@ -28,9 +26,6 @@ class QImageLabel(QLabel):
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
         sizePolicy.setHeightForWidth(True)
         self.setSizePolicy(sizePolicy)
-
-        if imgPath is not None:
-            self.readImage()
 
     def readImage(self):
         # read in the image
@@ -41,6 +36,10 @@ class QImageLabel(QLabel):
                 f'Cannot load {self.imgPath}')
             return
         self.setImage(image)
+
+    def setImagePath(self, imgPath):
+        self.imgPath = imgPath
+        self.readImage()
 
     def setImage(self, image: QImage):
         # save the image
@@ -89,23 +88,56 @@ class QImageGrid(QWidget):
         self._focusItemColumn = 0
 
         # read in the image as a grid
-        self.imageGridPaths = None
+        self.splitImages = None
         self.readImage()
 
     def readImage(self):
 
         if self.rows > 1 and self.cols > 1:
             # split image
-            self.imageGridPaths = split_image(self.baseImgPath, self.splitDir, self.rows, self.cols)
+            self.splitImages = self._splitImage() # split_image(self.baseImgPath, self.splitDir, self.rows, self.cols)
 
             # read in pieces
-            for row, imgRow in enumerate(self.imageGridPaths):
-                for col, imgPath in enumerate(imgRow):
-                    imageLabel = QImageLabel(imgPath)
+            for row, imgRow in enumerate(self.splitImages):
+                for col, image in enumerate(imgRow):
+                    imageLabel  = QImageLabel()
+                    imageLabel.setImage(image)
                     self.gridLayout.addWidget(imageLabel, row, col)
         
         else:
-            self.gridLayout.addWidget(QImageLabel(self.baseImgPath), 0, 0)
+            imageLabel = QImageLabel()
+            imageLabel.setImagePath(self.baseImgPath)
+            self.gridLayout.addWidget(imageLabel, 0, 0)
+
+    def _splitImage(self):
+
+        # open image
+        img = QImage(str(self.baseImgPath))
+
+        width = img.width()
+        height = img.height()
+
+        segmentWidth = width / self.cols
+        segmentHeight = height / self.rows
+
+        # hold list of image labels
+        splitImageList = []
+        imageRow = []
+
+        # crop image into AxB
+        for row in range(self.rows):
+            for col in range(self.cols):
+
+                x = width - (self.cols - col) * segmentWidth
+                y = height - (self.rows - row) * segmentHeight
+
+                cropped = img.copy(x, y, segmentWidth, segmentHeight)
+                imageRow.append(cropped)
+
+            splitImageList.append(imageRow.copy())
+            imageRow.clear()
+
+        return splitImageList
 
     def writeImage(self):
 
