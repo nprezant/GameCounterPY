@@ -33,7 +33,7 @@ class QGameCounter(QMainWindow):
         self.createMenus()
         self.createToolbars()
 
-        self.setWindowTitle('Image Grid Viewer and Painter')
+        self.setWindowTitle('Animal Counter')
         self.setWindowIcon(QIcon('./icons/mainWindowIcon.png'))
         self.resize(800, 500)
 
@@ -41,6 +41,11 @@ class QGameCounter(QMainWindow):
     def changeMainImage(self, newPixmap):
         self.imagePainter.setMainPixmap(newPixmap)
         self.imagePainter.bestFitImage()
+
+    @pyqtSlot(QPixmap)
+    def updateWindowTitle(self):
+        fp = Path(self.imageGridViewer.imageGrids.getFocusedGrid().baseImgPath)
+        self.setWindowTitle(f'Animal Counter - {fp.name}')
 
     def updateImageGridVisibility(self):
         if self.imageGridsToggle.isChecked():
@@ -72,6 +77,7 @@ class QGameCounter(QMainWindow):
     def createConnections(self):
         self.imageGridViewer.imageGrids.focusChanged.connect(self.changeMainImage)
         self.imageGridViewer.imageGrids.focusChanged.connect(self.imagePainter.clearDrawnItems)
+        self.imageGridViewer.imageGrids.focusChanged.connect(self.updateWindowTitle)
         self.imagePainter.imageFlattened.connect(self.imageGridViewer.changeFocusedImageData)
 
     def createActions(self):
