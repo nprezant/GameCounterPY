@@ -5,7 +5,7 @@ from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter, QKeyEvent, QIcon
 from PyQt5.QtWidgets import (
     QLabel, QSizePolicy, QScrollArea, QMainWindow,
     QFileDialog, QWidget, QGridLayout, QVBoxLayout, QMessageBox,
-    QToolBar, QAction, QMenu
+    QToolBar, QAction, QMenu, QInputDialog
 )
 
 from QImageGridErrors import MoveGridItemFocusError, MoveGridFocusError
@@ -66,6 +66,9 @@ class QImageLabel(QLabel):
 
 class QImageGrid(QWidget):
 
+    clsRows = 2
+    clsCols = 2
+
     def __init__(self, baseImgPath):
 
         super().__init__()
@@ -79,9 +82,9 @@ class QImageGrid(QWidget):
         self.setSizePolicy(QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Ignored))
 
         # options
-        self.splitDir = self.baseImgPath.parent / Path('split')
-        self.rows = 2
-        self.cols = 2
+        # self.splitDir = self.baseImgPath.parent / Path('split')
+        self.rows = self.clsRows
+        self.cols = self.clsCols
 
         # defaults
         self._focusItemRow = 0
@@ -269,7 +272,8 @@ class QImageGrids(QWidget):
         grid = self.getFocusedGrid()
         grid.reloadImage()
         self.connectGridSignals(grid)
-        # self.emitFocusChanged() TODO this causes AttributeError: 'QWidgte' object has no attribute 'pixmap'
+        # grid.reFocus()
+        # self.emitFocusChanged() # TODO this causes AttributeError: 'QWidgte' object has no attribute 'pixmap'
 
     def getFocusedGrid(self) -> QImageGrid:
         imgGridItem = self.VBoxLayout.itemAt(self._focusItemIndex)
@@ -468,13 +472,29 @@ class QImageGridViewer(QScrollArea):
 
         self.resetImageAct = QAction(QIcon('./icons/refreshIcon.png'), 'Reset Image', self, shortcut=Qt.CTRL + Qt.Key_R, triggered=self.reloadFocusedImage)
 
+        self.promptGridRowsAct = QAction('Set grid rows', self, triggered=self.promptForGridRows)
+        self.promptGridColumnsAct = QAction('Set grid columns', self, triggered=self.promptForGridColumns)
+
     def initMenu(self):
-        self.menu = QMenu('Grids', self)
+        self.menu = QMenu('&Grids', self)
         self.menu.addAction(self.itemFocusDownAct)
         self.menu.addAction(self.itemFocusUpAct)
         self.menu.addAction(self.itemFocusLeftAct)
         self.menu.addAction(self.itemFocusRightAct)
+        self.menu.addSeparator()
+        self.menu.addAction(self.promptGridRowsAct)
+        self.menu.addAction(self.promptGridColumnsAct)
 
     def initToolbar(self):
         self.createActions()
         self.toolbar.addAction(self.resetImageAct)
+
+    def promptForGridRows(self):
+        rows, okPressed = QInputDialog.getInt(self, 'Grid Rows','Number of grid rows:', QImageGrid.clsRows, 1, 20, 1)
+        if okPressed:
+            QImageGrid.clsRows = rows
+
+    def promptForGridColumns(self):
+        cols, okPressed = QInputDialog.getInt(self, 'Grid Columns','Number of grid columns:', QImageGrid.clsCols, 1, 20, 1)
+        if okPressed:
+            QImageGrid.clsCols = cols
