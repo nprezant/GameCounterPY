@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt, QRectF, QMarginsF, QTimeLine, pyqtSignal
-from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter, QWheelEvent, QKeyEvent, QIcon, QPen, QColor
+from PyQt5.QtGui import QKeySequence, QImage, QPixmap, QPalette, QPainter, QWheelEvent, QKeyEvent, QIcon, QPen, QColor
 from PyQt5.QtWidgets import (
     QGraphicsView, QGraphicsScene, QGraphicsItem, QToolBar, QAction,
     QApplication
@@ -32,6 +32,9 @@ class QSmoothGraphicsView(QGraphicsView):
             self.translateHorizontalEvent(100)
         else:
             super().keyPressEvent(event)
+
+    def mouseDoubleClickEvent(self, event):
+        self.zoom(75)
 
     def wheelEvent(self, event: QWheelEvent):
         modifiers = QApplication.keyboardModifiers()
@@ -74,7 +77,7 @@ class QSmoothGraphicsView(QGraphicsView):
         bar.setValue(bar.value() + dx)
 
     def translateHorizontalEvent(self, dx):
-        numSteps = dx * 1
+        numSteps = dx * 20
         self._numScheduledHTranslations += numSteps
 
         if (self._numScheduledHTranslations * numSteps < 0): # if user moved the wheel in another direction, we reset previously scheduled scalings
@@ -90,9 +93,9 @@ class QSmoothGraphicsView(QGraphicsView):
 
     def translateHTime(self, x):
         if self._numScheduledHTranslations > 0:
-            dx = 1
+            dx = 10
         else:
-            dx = -1
+            dx = -10
         self.translateHorizontal(dx)
 
     def translateHAnimFinished(self):
@@ -104,7 +107,7 @@ class QSmoothGraphicsView(QGraphicsView):
         self.animatingH = False
 
     def translateVerticalEvent(self, dy):
-        numSteps = dy * 1
+        numSteps = dy * 20
         self._numScheduledVTranslations += numSteps
 
         if (self._numScheduledVTranslations * numSteps < 0): # if user moved the wheel in another direction, we reset previously scheduled scalings
@@ -120,9 +123,11 @@ class QSmoothGraphicsView(QGraphicsView):
 
     def translateVTime(self, y):
         if self._numScheduledVTranslations > 0:
-            dy = 1
+            dy = 10
         else:
-            dy = -1
+            dy = -10
+
+        # dy = self._numScheduledVTranslations / 500
         self.translateVertical(dy)
 
     def translateVAnimFinished(self):
@@ -227,6 +232,11 @@ class QImagePainter(QSmoothGraphicsView):
 
         self._drawnItems.clear()
 
+    def scaleView(self, scaleFactor):
+        print(f'self.width: {self.width()}')
+        # print(f'pixmap.width(): {self.scene.map.mainPixmapItem.boundingRect().width()}')
+        self.scale(scaleFactor, scaleFactor)
+
     def centerImage(self):
         self.centerOn(self.mainPixmapItem)
 
@@ -290,9 +300,9 @@ class QImagePainter(QSmoothGraphicsView):
             self.setDragMode(QGraphicsView.NoDrag)
 
     def createActions(self):
-        self.selectionModeAct = QAction(QIcon('./icons/selectIcon.png'), '&Select', self, checkable=True, checked=True, triggered=self.toggleSelectionMode)
-        self.ovalModeAct = QAction(QIcon('./icons/ovalIcon.png'), '&Draw Oval', self, checkable=True, checked=False, triggered=self.toggleOvalMode)
-        self.flattenAct = QAction(QIcon('./icons/saveIcon.png'), 'Save', self, triggered=self.flattenImage)
+        self.selectionModeAct = QAction(QIcon('./icons/selectIcon.png'), '&Select', self, checkable=True, checked=True, shortcut=Qt.Key_V, triggered=self.toggleSelectionMode)
+        self.ovalModeAct = QAction(QIcon('./icons/ovalIcon.png'), '&Draw Oval', self, checkable=True, checked=False, shortcut=Qt.Key_O, triggered=self.toggleOvalMode)
+        self.flattenAct = QAction(QIcon('./icons/saveIcon.png'), 'Save', self, shortcut=QKeySequence.Save, triggered=self.flattenImage)
 
     def initToolbar(self):
         self.createActions()
