@@ -82,7 +82,7 @@ class QGameCounter(QMainWindow):
 
     def createActions(self):
         self.openAct = QAction('&Open...', self, shortcut='Ctrl+O', triggered=self.open)
-        self.exitAct = QAction('E&xit', self, shortcut='Ctrl+W', triggered=self.close)
+        self.exitAct = QAction('E&xit', self, shortcut='Ctrl+Q', triggered=self.close)
         self.aboutAct = QAction('&About', self, triggered=self.about)
         self.aboutQtAct = QAction('About &Qt', self, triggered=qApp.aboutQt)
 

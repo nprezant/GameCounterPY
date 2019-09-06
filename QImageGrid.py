@@ -174,7 +174,10 @@ class QImageGrid(QWidget):
 
     def clearFocusItem(self):
         widget = self.getFocusWidget()
-        widget.clearHighlight()
+        try:
+            widget.clearHighlight()
+        except AttributeError:
+            pass
 
     def getFocusItem(self):
         return self.getItemAtPosition(self._focusItemRow, self._focusItemColumn)
@@ -257,22 +260,36 @@ class QImageGrids(QWidget):
         
     def add(self, imgPath):
         imgGrid = QImageGrid(imgPath)
-        # imgGrid.setMinimumHeight(100)
         self.VBoxLayout.insertWidget(self.VBoxLayout.count()-1, imgGrid)
 
         self.connectGridSignals(imgGrid)
 
     def connectGridSignals(self, grid):
-        # TODO make this happen on a reload of a grid
         for img in grid.children():
             if isinstance(img, QImageLabel):
                 img.clicked.connect(self.imageClicked)
+
+    def removeFocusedGrid(self):
+        # TODO
+        grid = self.getFocusedGrid() # .VBoxLayout.itemAt(self._focusItemIndex)
+        if isinstance(grid, QImageGrid):
+            self.VBoxLayout.removeWidget(grid)
+            grid.deleteLater()
+            try:
+                self.moveGridFocusUp()
+            except MoveGridFocusError:
+                pass
+            finally:
+                newGrid = self.getFocusedGrid()
+                if newGrid is not None:
+                    newGrid.reFocus()
+                    self.emitFocusChanged()
 
     def reloadFocusedGrid(self):
         grid = self.getFocusedGrid()
         grid.reloadImage()
         self.connectGridSignals(grid)
-        # grid.reFocus()
+        # self.getFocusedGrid().reFocus()
         # self.emitFocusChanged() # TODO this causes AttributeError: 'QWidgte' object has no attribute 'pixmap'
 
     def getFocusedGrid(self) -> QImageGrid:
@@ -286,7 +303,9 @@ class QImageGrids(QWidget):
     def imageClicked(self):
 
         # clear the currently selected image
-        self.getFocusedGrid().clearFocusItem()
+        oldGrid = self.getFocusedGrid()
+        if oldGrid is not None:
+            oldGrid.clearFocusItem()
 
         # focus on the new image
         imgLabel = self.sender()
@@ -315,7 +334,7 @@ class QImageGrids(QWidget):
         else:
             raise MoveGridFocusError(
                 self._focusItemIndex, self._focusItemIndex - 1,
-                'Grid -1 does not exist'
+                'Grid "-1" does not exist'
             )
 
     def moveItemFocusDown(self):
@@ -416,6 +435,9 @@ class QImageGridViewer(QScrollArea):
     def openFile(self, fileName):
         self.imageGrids.add(Path(fileName))
 
+    def removeFocusedGrid(self):
+        self.imageGrids.removeFocusedGrid()
+
     def reloadFocusedImage(self):
         self.imageGrids.reloadFocusedGrid()
 
@@ -475,6 +497,8 @@ class QImageGridViewer(QScrollArea):
         self.promptGridRowsAct = QAction('Set grid rows', self, triggered=self.promptForGridRows)
         self.promptGridColumnsAct = QAction('Set grid columns', self, triggered=self.promptForGridColumns)
 
+        self.removeFocusedGridAct = QAction('Remove current image', self, shortcut=Qt.CTRL + Qt.Key_W, triggered=self.removeFocusedGrid)
+
     def initMenu(self):
         self.menu = QMenu('&Grids', self)
         self.menu.addAction(self.itemFocusDownAct)
@@ -484,6 +508,8 @@ class QImageGridViewer(QScrollArea):
         self.menu.addSeparator()
         self.menu.addAction(self.promptGridRowsAct)
         self.menu.addAction(self.promptGridColumnsAct)
+        self.menu.addSeparator()
+        self.menu.addAction(self.removeFocusedGridAct)
 
     def initToolbar(self):
         self.createActions()
