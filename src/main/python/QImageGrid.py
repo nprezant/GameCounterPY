@@ -437,9 +437,16 @@ class QImageGridViewer(QScrollArea):
             options=options)
 
         if fileNames:
-            for fileName in fileNames:
-                # TODO don't open the file if a version with "inked" exists
-                self.openFile(fileName)
+
+            filePaths = [Path(name) for name in fileNames]
+
+            for filePath in filePaths:
+
+                # don't open the file if a version with "inked" exists
+                if inkPath(filePath) in filePaths:
+                    pass # print(f'skipped {filePath}')
+                else:
+                    self.openFile(filePath)
 
     def openFile(self, fileName):
         self.imageGrids.add(Path(fileName))
@@ -548,3 +555,13 @@ class QImageGridViewer(QScrollArea):
         cols, okPressed = QInputDialog.getInt(self, 'Grid Columns','Number of grid columns:', QImageGrid.clsCols, 1, 20, 1)
         if okPressed:
             QImageGrid.clsCols = cols
+
+def inkPath(basePath):
+    if not isinstance(basePath, Path):
+        basePath = Path(basePath)
+    inked = basePath.parent / Path(f'{basePath.stem}_Inked{basePath.suffix}')
+    
+    if isinstance(basePath, Path):
+        return inked
+    else:
+        return str(inked)
