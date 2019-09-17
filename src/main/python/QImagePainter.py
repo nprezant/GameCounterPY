@@ -160,6 +160,8 @@ class QImagePainter(QSmoothGraphicsView):
 
         self.mainPixmapItem = self.scene.addPixmap(QPixmap())
 
+        self._appContext = None
+
         # policies
         # self.setTransformationAnchor(QGraphicsView.AnchorUnderMouse)
         # self.setResizeAnchor(QGraphicsView.AnchorUnderMouse)
@@ -177,6 +179,16 @@ class QImagePainter(QSmoothGraphicsView):
         self._drawnItems = []
 
         self.updateDragMode()
+
+    @property
+    def appContext(self):
+        return self._appContext
+
+    @appContext.setter
+    def appContext(self, context):
+        self._appContext = context
+        self.toolbar.clear()
+        self.initToolbar()
 
     def setMainPixmapFromPath(self, imgPath):
 
@@ -308,10 +320,21 @@ class QImagePainter(QSmoothGraphicsView):
             self.setDragMode(QGraphicsView.NoDrag)
 
     def createActions(self):
-        self.selectionModeAct = QAction(QIcon('./icons/selectIcon.png'), '&Select', self, checkable=True, checked=True, shortcut=Qt.Key_V, triggered=self.toggleSelectionMode)
-        self.ovalModeAct = QAction(QIcon('./icons/ovalIcon.png'), '&Draw Oval', self, checkable=True, checked=False, shortcut=Qt.Key_O, triggered=self.toggleOvalMode)
-        self.flattenAct = QAction(QIcon('./icons/saveIcon.png'), 'Save', self, shortcut=QKeySequence.Save, triggered=self.flattenImage)
-        self.undoAct = QAction(QIcon('./icons/undoIcon.png'), 'Save', self, shortcut=QKeySequence.Undo, triggered=self.removeLastDrawnItem)
+        if self.appContext is None:
+            selectionModeFp = './icons/selectIcon.png'
+            ovalModeFp = './icons/ovalIcon.png'
+            flattenFp = './icons/saveIcon.png'
+            undoFp = './icons/undoIcon.png'
+        else:
+            selectionModeFp = self.appContext.get_resource('selectIcon.png')
+            ovalModeFp = self.appContext.get_resource('ovalIcon.png')
+            flattenFp = self.appContext.get_resource('saveIcon.png')
+            undoFp = self.appContext.get_resource('undoIcon.png')
+
+        self.selectionModeAct = QAction(QIcon(selectionModeFp), '&Select', self, checkable=True, checked=True, shortcut=Qt.Key_V, triggered=self.toggleSelectionMode)
+        self.ovalModeAct = QAction(QIcon(ovalModeFp), '&Draw Oval', self, checkable=True, checked=False, shortcut=Qt.Key_O, triggered=self.toggleOvalMode)
+        self.flattenAct = QAction(QIcon(flattenFp), 'Save', self, shortcut=QKeySequence.Save, triggered=self.flattenImage)
+        self.undoAct = QAction(QIcon(undoFp), 'Undo', self, shortcut=QKeySequence.Undo, triggered=self.removeLastDrawnItem)
 
     def initToolbar(self):
         self.createActions()

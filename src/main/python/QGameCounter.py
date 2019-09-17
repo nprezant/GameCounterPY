@@ -32,10 +32,32 @@ class QGameCounter(QMainWindow):
         self.createActions()
         self.createMenus()
         self.createToolbars()
+        
+        self._appContext = None
 
         self.setWindowTitle('Animal Counter')
-        self.setWindowIcon(QIcon('./icons/mainWindowIcon.png'))
+        # self.setWindowIcon(QIcon('./icons/mainWindowIcon.png'))
+        self.setWindowIconFbs()
         self.resize(800, 500)
+
+    @property
+    def appContext(self):
+        return self._appContext
+
+    @appContext.setter
+    def appContext(self, context):
+        self._appContext = context
+        self.imageGridViewer.appContext = context
+        self.imagePainter.appContext = context
+
+        self.setWindowIconFbs()
+
+    def setWindowIconFbs(self):
+        if self.appContext is None:
+            fp = '../icons/mainWindowIcon.png'
+        else:
+            fp = self.appContext.get_resource('mainWindowIcon.png')
+        self.setWindowIcon(QIcon(fp))
 
     @pyqtSlot(QPixmap)
     def changeMainImage(self, newPixmap):

@@ -1,9 +1,14 @@
 __pycache__
 .vscode
 ref
-
+target
+transect
 transect/split
 
 image_creation
 
 blah.css
+
+*.bat
+
+PILSplitter.py

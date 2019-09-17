@@ -1,3 +1,5 @@
+from fbs_runtime.application_context import ApplicationContext
+
 from pathlib import Path
 
 from PyQt5.QtCore import Qt, QSize, QFile, QTextStream, pyqtSignal, pyqtSlot, QObject
@@ -260,6 +262,10 @@ class QImageGrids(QWidget):
         
     def add(self, imgPath):
         imgGrid = QImageGrid(imgPath)
+
+        # if imgGrid.name is like f'*_Inked':
+        #     imgGrid.baseImgPath = imgGrid.parents / imgGrid.name[0:-6] / imgGrid.suffix
+
         self.VBoxLayout.insertWidget(self.VBoxLayout.count()-1, imgGrid)
 
         self.connectGridSignals(imgGrid)
@@ -407,8 +413,10 @@ class QImageGridViewer(QScrollArea):
         self.setWidget(self.imageGrids)
         self.setWidgetResizable(True)
 
-        self.stylesheetPath = './QImageGridStyle.qss'
-        self.readStyleSheet()
+        self._appContext = None
+
+        self.stylesheetPath = 'QImageGridStyle.qss'
+        # self.readStyleSheet()
 
         self.toolbar = QToolBar()
         self.initToolbar()
@@ -416,7 +424,7 @@ class QImageGridViewer(QScrollArea):
         self.initMenu() # makes self.menu
 
     def readStyleSheet(self):
-        f = QFile(self.stylesheetPath)
+        f = QFile(self.appContext.get_resource(self.stylesheetPath))
         f.open(QFile.ReadOnly | QFile.Text)
         stream = QTextStream(f)
         self.setStyleSheet(stream.readAll())
@@ -430,6 +438,7 @@ class QImageGridViewer(QScrollArea):
 
         if fileNames:
             for fileName in fileNames:
+                # TODO don't open the file if a version with "inked" exists
                 self.openFile(fileName)
 
     def openFile(self, fileName):
@@ -486,13 +495,28 @@ class QImageGridViewer(QScrollArea):
     def sizeHint(self):
         return QSize(150,400)
 
+    @property
+    def appContext(self):
+        return self._appContext
+
+    @appContext.setter
+    def appContext(self, context):
+        self._appContext = context
+        self.toolbar.clear()
+        self.initToolbar()
+
     def createActions(self):
+        if self.appContext is None:
+            refreshIconFp = './icons/refreshIcon.png'
+        else:
+            refreshIconFp = self.appContext.get_resource('refreshIcon.png')
+
         self.itemFocusDownAct = QAction('Down Item', self, shortcut=Qt.CTRL + Qt.Key_Down, triggered=self.moveFocusDown)
         self.itemFocusUpAct = QAction('Up Item', self, shortcut=Qt.CTRL + Qt.Key_Up, triggered=self.moveFocusUp)
         self.itemFocusLeftAct = QAction('Left Item', self, shortcut=Qt.CTRL + Qt.Key_Left, triggered=self.moveFocusLeft)
         self.itemFocusRightAct = QAction('Right Item', self, shortcut=Qt.CTRL + Qt.Key_Right, triggered=self.moveFocusRight)
 
-        self.resetImageAct = QAction(QIcon('./icons/refreshIcon.png'), 'Reset Image', self, shortcut=Qt.CTRL + Qt.Key_R, triggered=self.reloadFocusedImage)
+        self.resetImageAct = QAction(QIcon(refreshIconFp), 'Reset Image', self, shortcut=Qt.CTRL + Qt.Key_R, triggered=self.reloadFocusedImage)
 
         self.promptGridRowsAct = QAction('Set grid rows', self, triggered=self.promptForGridRows)
         self.promptGridColumnsAct = QAction('Set grid columns', self, triggered=self.promptForGridColumns)
