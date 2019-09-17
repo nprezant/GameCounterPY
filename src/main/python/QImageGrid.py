@@ -1,6 +1,7 @@
 from fbs_runtime.application_context import ApplicationContext
 
 from pathlib import Path
+import re
 
 from PyQt5.QtCore import Qt, QSize, QFile, QTextStream, pyqtSignal, pyqtSlot, QObject
 from PyQt5.QtGui import QImage, QPixmap, QPalette, QPainter, QKeyEvent, QIcon
@@ -213,7 +214,11 @@ class QImageGrid(QWidget):
         self.clearFocusItem()
 
         widget = item.widget()
-        widget.highlight()
+        if not isinstance(widget, QImageLabel):
+            pass
+            # raise AttributeError(f'Widget should be a QImageLabel, but is instead: {widget}')
+        else:
+            widget.highlight()
 
         self._focusItemRow = row
         self._focusItemColumn = col
@@ -260,11 +265,14 @@ class QImageGrids(QWidget):
 
         self._focusItemIndex = 0
         
-    def add(self, imgPath):
+    def add(self, imgPath, imgBasePath=None):
         imgGrid = QImageGrid(imgPath)
 
-        # if imgGrid.name is like f'*_Inked':
-        #     imgGrid.baseImgPath = imgGrid.parents / imgGrid.name[0:-6] / imgGrid.suffix
+        if imgBasePath is not None:
+        # if re.match('._Inked', imgPath.name):
+            print('this boi is inked')
+            imgGrid.baseImgPath = imgBasePath
+            # imgGrid.baseImgPath = imgGrid.parents / imgGrid.name[0:-6] / imgGrid.suffix
 
         self.VBoxLayout.insertWidget(self.VBoxLayout.count()-1, imgGrid)
 
@@ -293,9 +301,11 @@ class QImageGrids(QWidget):
 
     def reloadFocusedGrid(self):
         grid = self.getFocusedGrid()
+        print(f'before reload: row: {grid._focusItemRow}, col: {grid._focusItemColumn}, grid: {grid}')
         grid.reloadImage()
+        print(f'after  reload: row: {grid._focusItemRow}, col: {grid._focusItemColumn}, grid: {self.getFocusedGrid()}')
         self.connectGridSignals(grid)
-        # self.getFocusedGrid().reFocus()
+        self.getFocusedGrid().reFocus()
         # self.emitFocusChanged() # TODO this causes AttributeError: 'QWidgte' object has no attribute 'pixmap'
 
     def getFocusedGrid(self) -> QImageGrid:
@@ -445,11 +455,17 @@ class QImageGridViewer(QScrollArea):
                 # don't open the file if a version with "inked" exists
                 if inkPath(filePath) in filePaths:
                     pass # print(f'skipped {filePath}')
+                elif isInked(filePath):
+                    print(removePathInk(filePath))
+                    self.openFile(filePath, removePathInk(filePath))
                 else:
                     self.openFile(filePath)
 
-    def openFile(self, fileName):
-        self.imageGrids.add(Path(fileName))
+    def openFile(self, fileName, baseFileName=None):
+        if baseFileName is None:
+            self.imageGrids.add(Path(fileName))
+        else:
+            self.imageGrids.add(Path(fileName), Path(baseFileName))
 
     def removeFocusedGrid(self):
         self.imageGrids.removeFocusedGrid()
@@ -565,3 +581,12 @@ def inkPath(basePath):
         return inked
     else:
         return str(inked)
+
+def isInked(fp):
+    if re.match('.*_Inked', fp.stem):
+        return True
+    else:
+        return False
+
+def removePathInk(fp):
+    return fp.parent / (fp.stem[0:-6] + fp.suffix)
