@@ -269,14 +269,14 @@ class QImageGrids(QWidget):
         imgGrid = QImageGrid(imgPath)
 
         if imgBasePath is not None:
-        # if re.match('._Inked', imgPath.name):
-            print('this boi is inked')
             imgGrid.baseImgPath = imgBasePath
-            # imgGrid.baseImgPath = imgGrid.parents / imgGrid.name[0:-6] / imgGrid.suffix
 
         self.VBoxLayout.insertWidget(self.VBoxLayout.count()-1, imgGrid)
 
         self.connectGridSignals(imgGrid)
+
+    def count(self):
+        return self.VBoxLayout.count()-1
 
     def connectGridSignals(self, grid):
         for img in grid.children():
@@ -447,19 +447,20 @@ class QImageGridViewer(QScrollArea):
             options=options)
 
         if fileNames:
-
             filePaths = [Path(name) for name in fileNames]
+            self.openFiles(filePaths)
 
-            for filePath in filePaths:
+    def openFiles(self, filePaths):
 
-                # don't open the file if a version with "inked" exists
-                if inkPath(filePath) in filePaths:
-                    pass # print(f'skipped {filePath}')
-                elif isInked(filePath):
-                    print(removePathInk(filePath))
-                    self.openFile(filePath, removePathInk(filePath))
-                else:
-                    self.openFile(filePath)
+        for filePath in filePaths:
+
+            # don't open the file if a version with "inked" exists
+            if inkPath(filePath) in filePaths:
+                pass # print(f'skipped {filePath}')
+            elif isInked(filePath):
+                self.openFile(filePath, removePathInk(filePath))
+            else:
+                self.openFile(filePath)
 
     def openFile(self, fileName, baseFileName=None):
         if baseFileName is None:
@@ -468,12 +469,20 @@ class QImageGridViewer(QScrollArea):
             self.imageGrids.add(Path(fileName), Path(baseFileName))
 
     def removeFocusedGrid(self):
-        self.imageGrids.removeFocusedGrid()
+        if not self.imageGrids.count() == 0:
+            self.imageGrids.removeFocusedGrid()
 
     def reloadFocusedImage(self):
-        self.imageGrids.reloadFocusedGrid()
+        if not self.imageGrids.count() == 0:
+            self.imageGrids.reloadFocusedGrid()
 
     def focusLastGrid(self):
+        self.focusGridAtIndex(self.imageGrids.VBoxLayout.count() - 2)
+
+    def focusFirstGrid(self):
+        self.focusGridAtIndex(0)
+
+    def focusGridAtIndex(self, index):
         oldGrid = self.imageGrids.getFocusedGrid()
 
         if oldGrid is None:
@@ -481,7 +490,7 @@ class QImageGridViewer(QScrollArea):
 
         oldGrid.clearFocusItem()
 
-        self.imageGrids._focusItemIndex = self.imageGrids.VBoxLayout.count() - 2
+        self.imageGrids._focusItemIndex = index
         newGrid = self.imageGrids.getFocusedGrid()
         newGrid.setFocusItem(0, 0)
         self.imageGrids.emitFocusChanged()
@@ -499,21 +508,27 @@ class QImageGridViewer(QScrollArea):
 
     @pyqtSlot(QImage)
     def changeFocusedImageData(self, newImage):
-        widget = self.imageGrids.getFocusedGrid().getFocusWidget()
-        widget.setImage(newImage)
-        self.imageGrids.getFocusedGrid().writeImage()
+        grid = self.imageGrids.getFocusedGrid()
+        if grid is not None:
+            widget = grid.getFocusWidget()
+            widget.setImage(newImage)
+            self.imageGrids.getFocusedGrid().writeImage()
 
     def moveFocusDown(self):
-        self.imageGrids.moveItemFocusDown()
+        if not self.imageGrids.count() == 0:
+            self.imageGrids.moveItemFocusDown()
 
     def moveFocusUp(self):
-        self.imageGrids.moveItemFocusUp()
+        if not self.imageGrids.count() == 0:
+            self.imageGrids.moveItemFocusUp()
 
     def moveFocusLeft(self):
-        self.imageGrids.moveItemFocusLeft()
+        if not self.imageGrids.count() == 0:
+            self.imageGrids.moveItemFocusLeft()
 
     def moveFocusRight(self):
-        self.imageGrids.moveItemFocusRight()
+        if not self.imageGrids.count() == 0:
+            self.imageGrids.moveItemFocusRight()
 
     def sizeHint(self):
         return QSize(150,400)
