@@ -211,6 +211,10 @@ class QImagePainter(QSmoothGraphicsView):
         image = self.flattenImage()
         image.save(fileName)
 
+    def flattenImageIfDrawnOn(self):
+        if not len(self._drawnItems) == 0:
+            self.flattenImage()
+
     def flattenImage(self):
 
         # get region of scene
@@ -338,9 +342,9 @@ class QImagePainter(QSmoothGraphicsView):
 
     def initToolbar(self):
         self.createActions()
-        self.toolbar.addAction(self.flattenAct)
+        # self.toolbar.addAction(self.flattenAct)
         self.toolbar.addAction(self.undoAct)
-        self.toolbar.addSeparator()
+        # self.toolbar.addSeparator()
         self.toolbar.addAction(self.selectionModeAct)
         self.toolbar.addAction(self.ovalModeAct)
 

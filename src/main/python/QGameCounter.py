@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QKeySequence, QIcon, QImage, QPixmap, QKeyEvent
 from PyQt5.QtWidgets import (
     QMessageBox, QMainWindow, QShortcut,
@@ -48,6 +48,8 @@ class QGameCounter(QMainWindow):
         self.createActions()
         self.createMenus()
         self.createToolbars()
+        self.populateMenus()
+        self.populateToolbars()
         
         self.setWindowTitle('Animal Counter')
         self.setWindowIconFbs()
@@ -66,6 +68,12 @@ class QGameCounter(QMainWindow):
 
         self.setWindowIconFbs()
         self.createActions()
+
+        self.clearToolbars()
+        self.clearMenus()
+
+        self.populateToolbars()
+        self.populateMenus()
 
     def setWindowIconFbs(self):
         if self.appContext is None:
@@ -95,6 +103,10 @@ class QGameCounter(QMainWindow):
             self.imageGridViewer.show()
         else:
             self.imageGridViewer.hide()
+
+    def save(self):
+        self.imagePainter.flattenImage()
+        self.tracker.dump()
 
     def open(self):
         options = QFileDialog.Options()
@@ -147,7 +159,6 @@ class QGameCounter(QMainWindow):
         self.imageGridViewer.imageGrids.focusChanged.connect(self.updateWindowTitle)
         self.imageGridViewer.imageGrids.focusChanged.connect(self.updateTrackerFile)
         self.imagePainter.imageFlattened.connect(self.imageGridViewer.changeFocusedImageData)
-        self.imagePainter.imageFlattened.connect(self.tracker.dump)
 
     def createActions(self):
 
@@ -155,12 +166,17 @@ class QGameCounter(QMainWindow):
             addAnimalFp = './resources/addAnimalIcon.png'
             trackerViewIconFp = 'showTrackerIcon.png'
             gridIconFp = 'showGridIcon.png'
+            openIconFp = 'openIcon.png'
+            saveIconFp = 'saveIcon.png'
         else:
             addAnimalFp = self.appContext.get_resource('showAnimalAdderIcon.png')
             trackerViewIconFp = self.appContext.get_resource('showTrackerIcon.png')
             gridIconFp = self.appContext.get_resource('showGridIcon.png')
+            openIconFp = self.appContext.get_resource('openIcon.png')
+            saveIconFp = self.appContext.get_resource('saveIcon.png')
 
-        self.openAct = QAction('&Open...', self, shortcut='Ctrl+O', triggered=self.open)
+        self.saveAct = QAction(QIcon(saveIconFp), 'Save', self, shortcut=QKeySequence.Save, triggered=self.save)
+        self.openAct = QAction(QIcon(openIconFp), '&Open...', self, shortcut=QKeySequence.Open, triggered=self.open)
         self.exitAct = QAction('E&xit', self, shortcut='Ctrl+Q', triggered=self.close)
         self.aboutAct = QAction('&About', self, triggered=self.about)
         self.aboutQtAct = QAction('About &Qt', self, triggered=qApp.aboutQt)
@@ -175,21 +191,38 @@ class QGameCounter(QMainWindow):
         self.trackerViewToggle = self.trackerDock.toggleViewAction()
         self.trackerViewToggle.setIcon(QIcon(trackerViewIconFp))
 
+    def clearMenus(self):
+        self.fileMenu.clear()
+        self.viewMenu.clear()
+        self.helpMenu.clear()
+
+    def clearToolbars(self):
+        self.viewToolBar.clear()
+        self.fileToolBar.clear()
+
     def createMenus(self):
         self.fileMenu = QMenu('&File', self)
+        self.viewMenu = QMenu('&View', self)
+        self.helpMenu = QMenu('&Help', self)
+
+    def populateMenus(self):
+        
+        self.fileMenu.addAction(self.saveAct)
         self.fileMenu.addAction(self.openAct)
         self.fileMenu.addSeparator()
         self.fileMenu.addAction(self.exitAct)
 
-        self.viewMenu = QMenu('&View', self)
         self.viewMenu.addSeparator()
         self.viewMenu.addAction(self.imageGridsToggle)
         self.viewMenu.addAction(self.addAnimalToggle)
         self.viewMenu.addAction(self.trackerViewToggle)
 
-        self.helpMenu = QMenu('&Help', self)
         self.helpMenu.addAction(self.aboutAct)
         self.helpMenu.addAction(self.aboutQtAct)
+
+        self.arangeMenus()
+
+    def arangeMenus(self):
 
         self.menuBar().addMenu(self.fileMenu)
         self.menuBar().addMenu(self.viewMenu)
@@ -199,12 +232,23 @@ class QGameCounter(QMainWindow):
 
     def createToolbars(self):
         self.viewToolBar = QToolBar()
+        self.fileToolBar = QToolBar()
+
+    def populateToolbars(self):
+
         self.viewToolBar.addAction(self.addAnimalToggle)
         self.viewToolBar.addAction(self.trackerViewToggle)
 
+        self.fileToolBar.addAction(self.saveAct)
+        self.fileToolBar.addAction(self.openAct)
+
+        self.arangeToolbars()
+
+    def arangeToolbars(self):
+
+        self.addToolBar(Qt.LeftToolBarArea, self.fileToolBar)
         self.addToolBar(Qt.LeftToolBarArea, self.imagePainter.toolbar)
         self.addToolBar(Qt.LeftToolBarArea, self.imageGridViewer.toolbar)
-        # self.addToolBar(Qt.LeftToolBarArea, self.tracker.toolbar)
         self.addToolBar(Qt.LeftToolBarArea, self.viewToolBar)
 
 

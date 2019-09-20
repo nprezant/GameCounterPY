@@ -7,7 +7,8 @@ from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import (
     QWidget, QListWidget, QFormLayout, QLabel, QLineEdit, QToolBar, 
-    QAction, QPushButton, QSpinBox, QComboBox, QMessageBox, QMenu
+    QAction, QPushButton, QSpinBox, QComboBox, QMessageBox, QMenu,
+    QListWidgetItem
 )
 
 from JSONTools import ObjectEncoder
@@ -63,6 +64,15 @@ class GameCountTracker(list):
         else:
             data.count += count
             data.repeats += repeats
+
+    def removeSpecies(self, species):
+        # remove the data corresponding to this species
+        data = next((x for x in self if x.species == species), None)
+
+        if data is None:
+            print('you tried to remove a species that is not here, fool')
+        else:
+            self.remove(data)
 
     def __str__(self):
         s = ''
@@ -160,11 +170,25 @@ class QGameCountInputForm(QWidget):
         self.speciesLabel = QLabel('Species')
         self.speciesBox = QComboBox()
         self.speciesBox.setEditable(True)
-        self.speciesBox.addItem('Springbok')
-        self.speciesBox.addItem('Gemsbok')
-        self.speciesBox.addItem('Warthog')
+        self.speciesBox.addItem('Baboon')
+        self.speciesBox.addItem('Donkey')
         self.speciesBox.addItem('Eland')
+        self.speciesBox.addItem('Elephant')
+        self.speciesBox.addItem('Gemsbok')
+        self.speciesBox.addItem('Giraffe')
+        self.speciesBox.addItem('Hartebeest')
+        self.speciesBox.addItem('Horse')
+        self.speciesBox.addItem('Impala')
+        self.speciesBox.addItem('Jackal')
         self.speciesBox.addItem('Kudu')
+        self.speciesBox.addItem('Kudu')
+        self.speciesBox.addItem('Ostrich')
+        self.speciesBox.addItem('Rhino')
+        self.speciesBox.addItem('Springbok')
+        self.speciesBox.addItem('Steenbok')
+        self.speciesBox.addItem('Warthog')
+        self.speciesBox.addItem('Waterbuck')
+        self.speciesBox.addItem('Zebra')
 
         # count input
         self.countLabel = QLabel('Count')
@@ -263,6 +287,13 @@ class QGameCountTracker(QListWidget):
         self.counts.addData(self.currentImageFile, data)
         self.render()
 
+    def keyReleaseEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_Delete:
+            self.clearCurrentSelectionCountData()
+        else:
+            super().keyPressEvent(event)
+
     def load(self, fileName):
         self.JSONDumpFile = fileName
         with open(self.JSONDumpFile, 'r') as f:
@@ -307,18 +338,17 @@ class QGameCountTracker(QListWidget):
 
     def summarize(self):
         s = self.counts.totalsSummary()
-        s += '\n-------------------------\n\n'
+        s += '\n-------------------------\n'
         s += str(self.counts)
         return s
 
     def displaySummary(self):
         QMessageBox.about(self, 'Count Summary',
             self.counts.totalsSummaryHTML()
-            + '\n-------------------------\n\n'
+            + '\n-------------------------\n'
             + self.counts.toHTML())
 
     def serialize(self):
-        # TODO make a nice JSON dumpable thing
         return json.dumps(self.counts, cls=ObjectEncoder, indent=2, sort_keys=True)
 
     def clearData(self):
@@ -327,10 +357,15 @@ class QGameCountTracker(QListWidget):
         self.counts.clear()
         self.render()
 
-    def clearCurrentFileData(self):
-        # TODO clear the data for just the current file.
-        # do this when the user selects the file and presses delete
-        pass
+    def clearCurrentSelectionCountData(self):
+        # TODO clear the data for just the current file AND species
+        fileName = self.currentImageFile
+        item = self.currentItem()
+
+        if item is not None:
+            species = item.species
+            self.counts[fileName].removeSpecies(species)
+            self.render()
 
     def render(self):
         self.clear()
@@ -340,7 +375,10 @@ class QGameCountTracker(QListWidget):
             pass
         else:
             for track in tracker:
-                self.addItem(str(track))
+
+                # add item and save the species for easier access later
+                item = QListWidgetItem(str(track), self)
+                item.species = track.species
 
     def createActions(self):
         if self.appContext is None:
@@ -350,7 +388,7 @@ class QGameCountTracker(QListWidget):
             clearFp = self.appContext.get_resource('eraserIcon.png')
             infoFp = self.appContext.get_resource('infoIcon.png')
 
-        self.clearDataAct = QAction(QIcon(clearFp), '&Clear Animal Count Data', self, shortcut=Qt.Key_A, triggered=self.clearData)
+        self.clearDataAct = QAction(QIcon(clearFp), '&Clear All Animal Counts', self, triggered=self.clearData)
         self.summarizeAct = QAction(QIcon(infoFp), '&Summarize', self, shortcut=Qt.Key_S, triggered=self.displaySummary)
 
     def initToolbar(self):
