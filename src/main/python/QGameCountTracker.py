@@ -118,6 +118,15 @@ class MultiGameCountTracker(dict):
 
         return s
 
+    def totalsSummaryHTML(self):
+        totals = self.totals()
+        s = ''
+
+        for species, count in totals.items():
+            s += f'<p>{count} {species}</p>'
+
+        return s
+
     def __str__(self):
         s = ''
         for fileName, animalList in self.items():
@@ -129,7 +138,7 @@ class MultiGameCountTracker(dict):
     def toHTML(self):
         s = ''
         for fileName, animalList in self.items():
-            s += f'<p><b>{fileName}</b></p>'
+            s += f'<p>{fileName}</p>'
             s += '<ul>'
             for data in animalList:
                 s += f'<li>{data}</li>'
@@ -294,15 +303,19 @@ class QGameCountTracker(QListWidget):
             f.write(self.serialize())
 
         with open(self.summaryFile, 'w') as f:
-            f.write(self.counts.totalsSummary())
-            f.write('\n-------------------------\n\n')
             f.write(self.summarize())
 
     def summarize(self):
-        return str(self.counts)
+        s = self.counts.totalsSummary()
+        s += '\n-------------------------\n\n'
+        s += str(self.counts)
+        return s
 
     def displaySummary(self):
-        QMessageBox.about(self, 'Count Summary', self.counts.toHTML())
+        QMessageBox.about(self, 'Count Summary',
+            self.counts.totalsSummaryHTML()
+            + '\n-------------------------\n\n'
+            + self.counts.toHTML())
 
     def serialize(self):
         # TODO make a nice JSON dumpable thing
