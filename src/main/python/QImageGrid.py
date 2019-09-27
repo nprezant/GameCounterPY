@@ -336,12 +336,16 @@ class QImageGrids(QWidget):
         self._focusItemIndex = 0
         
     def add(self, imgPath, imgBasePath=None):
+        self.insert(self.VBoxLayout.count()-1, imgPath, imgBasePath)
+
+    def insert(self, index, imgPath, imgBasePath=None):
+
         imgGrid = QImageGrid(imgPath)
 
         if imgBasePath is not None:
             imgGrid.baseImgPath = imgBasePath
 
-        self.VBoxLayout.insertWidget(self.VBoxLayout.count()-1, imgGrid)
+        self.VBoxLayout.insertWidget(index, imgGrid)
 
         self.connectGridSignals(imgGrid)
 
@@ -370,13 +374,20 @@ class QImageGrids(QWidget):
                     self.emitFocusChanged()
 
     def reloadFocusedGrid(self):
+
+        index = self._focusItemIndex
         grid = self.getFocusedGrid()
-        print(f'before reload: row: {grid._focusItemRow}, col: {grid._focusItemColumn}, grid: {grid}')
-        grid.reloadImage()
-        print(f'after  reload: row: {grid._focusItemRow}, col: {grid._focusItemColumn}, grid: {self.getFocusedGrid()}')
-        self.connectGridSignals(grid)
-        self.getFocusedGrid().reFocus()
-        # self.emitFocusChanged() # TODO this causes AttributeError: 'QWidgte' object has no attribute 'pixmap'
+        row = grid._focusItemRow
+        col = grid._focusItemColumn
+        baseImgPath = grid.baseImgPath
+
+        self.removeFocusedGrid()
+        self.getFocusedGrid().clearFocusItem()
+        self.insert(index, baseImgPath)
+
+        self._focusItemIndex = index
+        self.getFocusedGrid().setFocusItem(row, col)
+        self.emitFocusChanged()
 
     def getFocusedGrid(self) -> QImageGrid:
         imgGridItem = self.VBoxLayout.itemAt(self._focusItemIndex)
