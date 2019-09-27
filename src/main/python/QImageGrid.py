@@ -248,6 +248,76 @@ class QImageGrid(QWidget):
         col = self._focusItemColumn + 1
         return self.setFocusItem(row, col)
 
+    def moveFocusNext(self):
+        row = self._focusItemRow
+        col = self._focusItemColumn
+
+        # figure out if we are in an even or odd row
+        if row % 2 == 0:
+            # EVEN row, move right a column if possible
+            if col < self.cols - 1:
+                col += 1
+            else:
+                row = self._tryGetNextRowNumber()
+        else:
+            # ODD row, move left a column if possible
+            if col > 0:
+                col -= 1
+            else:
+                row = self._tryGetNextRowNumber()
+
+        return self.setFocusItem(row, col)
+
+    def moveFocusPrevious(self):
+        row = self._focusItemRow
+        col = self._focusItemColumn
+
+        # figure out if we are in an even or odd row
+        if row % 2 == 0:
+            # EVEN row, move left a column if possible
+            if col > 0:
+                col -= 1
+            else:
+                row = self._tryGetPreviousRowNumber()
+        else:
+            # ODD row, move right a column if possible
+            if col < self.cols - 1:
+                col += 1
+            else:
+                row = self._tryGetPreviousRowNumber()
+
+        return self.setFocusItem(row, col)
+
+    def _tryGetNextRowNumber(self):
+        # if we are at the end of a column, keep column the same
+        # and try to move the row down
+        row = self._focusItemRow
+
+        if row < self.rows - 1:
+            row += 1
+        else:
+            raise MoveGridItemFocusError(
+                self._focusItemRow, self._focusItemColumn, row, self._focusItemColumn,
+                f'No item at ({row}, {self._focusItemColumn}'
+            )
+
+        return row
+
+    def _tryGetPreviousRowNumber(self):
+        # if we are at the beginning of a column, keep column the same
+        # and try to move the row up
+        row = self._focusItemRow
+
+        if row > 0:
+            row -= 1
+        else:
+            raise MoveGridItemFocusError(
+                self._focusItemRow, self._focusItemColumn, row, self._focusItemColumn,
+                f'No item at ({row}, {self._focusItemColumn}'
+            )
+
+        return row
+
 
 class QImageGrids(QWidget):
 
@@ -409,6 +479,47 @@ class QImageGrids(QWidget):
         else:
             self.emitFocusChanged()
 
+    def moveFocusNext(self):
+        grid = self.getFocusedGrid()
+        try:
+            grid.moveFocusNext()
+        except MoveGridItemFocusError:
+
+            try:
+                self.moveGridFocusDown()
+            except MoveGridFocusError:
+                pass
+            else:
+                newGrid = self.getFocusedGrid()
+                newGrid.setFocusItem(0, 0)
+                grid.clearFocusItem()
+                self.emitFocusChanged()
+
+        else:
+            self.emitFocusChanged()
+
+    def moveFocusPrevious(self):
+        grid = self.getFocusedGrid()
+        try:
+            grid.moveFocusPrevious()
+        except MoveGridItemFocusError:
+
+            try:
+                self.moveGridFocusUp()
+            except MoveGridFocusError:
+                pass
+            else:
+                newGrid = self.getFocusedGrid()
+                if newGrid.rows % 2 == 0:
+                    newGrid.setFocusItem(newGrid.rows - 1, 0)
+                else:
+                    newGrid.setFocusItem(newGrid.rows - 1, newGrid.cols - 1)
+                grid.clearFocusItem()
+                self.emitFocusChanged()
+
+        else:
+            self.emitFocusChanged()
+
 
 class QImageGridViewer(QScrollArea):
 
@@ -530,6 +641,14 @@ class QImageGridViewer(QScrollArea):
         if not self.imageGrids.count() == 0:
             self.imageGrids.moveItemFocusRight()
 
+    def moveFocusNext(self):
+        if not self.imageGrids.count() == 0:
+            self.imageGrids.moveFocusNext()
+
+    def moveFocusPrevious(self):
+        if not self.imageGrids.count() == 0:
+            self.imageGrids.moveFocusPrevious()
+
     def sizeHint(self):
         return QSize(150,400)
 
@@ -553,6 +672,8 @@ class QImageGridViewer(QScrollArea):
         self.itemFocusUpAct = QAction('Up Item', self, shortcut=Qt.CTRL + Qt.Key_Up, triggered=self.moveFocusUp)
         self.itemFocusLeftAct = QAction('Left Item', self, shortcut=Qt.CTRL + Qt.Key_Left, triggered=self.moveFocusLeft)
         self.itemFocusRightAct = QAction('Right Item', self, shortcut=Qt.CTRL + Qt.Key_Right, triggered=self.moveFocusRight)
+        self.itemFocusNextAct = QAction('Next Item', self, shortcut=Qt.CTRL + Qt.Key_N, triggered=self.moveFocusNext)
+        self.itemFocusPreviousAct = QAction('Previous Item', self, shortcut=Qt.CTRL + Qt.Key_P, triggered=self.moveFocusPrevious)
 
         self.resetImageAct = QAction(QIcon(refreshIconFp), 'Reset Image', self, shortcut=Qt.CTRL + Qt.Key_R, triggered=self.reloadFocusedImage)
 
@@ -567,6 +688,9 @@ class QImageGridViewer(QScrollArea):
         self.menu.addAction(self.itemFocusUpAct)
         self.menu.addAction(self.itemFocusLeftAct)
         self.menu.addAction(self.itemFocusRightAct)
+        self.menu.addSeparator()
+        self.menu.addAction(self.itemFocusNextAct)
+        self.menu.addAction(self.itemFocusPreviousAct)
         self.menu.addSeparator()
         self.menu.addAction(self.promptGridRowsAct)
         self.menu.addAction(self.promptGridColumnsAct)
