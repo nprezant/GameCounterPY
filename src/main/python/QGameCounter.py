@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal
+from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal, QThreadPool
 from PyQt5.QtGui import QKeySequence, QIcon, QImage, QPixmap, QKeyEvent
 from PyQt5.QtWidgets import (
     QMessageBox, QMainWindow, QShortcut,
@@ -12,6 +12,7 @@ from PyQt5.QtWidgets import (
 from QImageGrid import QImageGridViewer
 from QImagePainter import QImagePainter
 from QGameCountTracker import QGameCountTracker
+from QWorker import Worker
 
 class QGameCounter(QMainWindow):
 
@@ -43,6 +44,8 @@ class QGameCounter(QMainWindow):
         self.setCorner(Qt.BottomRightCorner, Qt.RightDockWidgetArea)
 
         self._appContext = None
+
+        # self.threadpool = QThreadPool()
 
         self.createConnections()
         self.createActions()
@@ -128,6 +131,14 @@ class QGameCounter(QMainWindow):
                 imagePaths.append(fp)
 
         if imagePaths:
+
+            # worker = Worker(self.imageGridViewer.openFiles, imagePaths)
+            # worker.signals.finished.connect(self.imageGridViewer.focusFirstGrid)
+            # worker.signals.finished.connect(self.imagePainter.centerImage)
+            # worker.signals.progress.connect(self.updateImageGridProgressBar)
+
+            # self.threadpool.start(worker)
+
             self.imageGridViewer.openFiles(imagePaths)
             self.imageGridViewer.focusFirstGrid()
             self.imagePainter.centerImage()
@@ -139,6 +150,10 @@ class QGameCounter(QMainWindow):
 
     def openFile(self, fileName):
         self.imageGridViewer.openFile(fileName)
+
+    @pyqtSlot(int)
+    def updateImageGridProgressBar(self, value):
+        print(f'progress on images is: {value}')
 
     def about(self):
         QMessageBox.about(self,

@@ -729,3 +729,20 @@ def isInked(fp):
 
 def removePathInk(fp):
     return fp.parent / (fp.stem[0:-6] + fp.suffix)
+
+def openFilesThreaded(self, filePaths, progressSignal, gridOpenedSignal):
+
+    pathCount = len(filePaths)
+
+    for n, filePath in enumerate(filePaths):
+
+        if progressSignal is not None:
+            progressSignal.emit(int(100*n/pathCount))
+
+        # don't open the file if a version with "inked" exists
+        # if inkPath(filePath) in filePaths:
+        #     pass # print(f'skipped {filePath}')
+        # elif isInked(filePath):
+        #     self.openFile(filePath, removePathInk(filePath))
+        # else:
+        #     self.openFile(filePath)
