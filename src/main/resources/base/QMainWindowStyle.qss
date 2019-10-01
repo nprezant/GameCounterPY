@@ -1,6 +1,6 @@
 QDockWidget::title {
     text-align: left;
-    background: lightgray;
+    background: none;
     padding-left: 5px;
     border: none;
 }
