@@ -5,9 +5,17 @@ from PyQt5.QtWidgets import (
     QApplication, QInputDialog, QMenu, QToolButton, QPushButton
 )
 
-COLORS = [
-    '#3296e6', 'Blue', 'Red', 'Green'
-]
+COLORS = {
+    'Teleric Blue': '#3296e6',
+    'Blue': 'Blue',
+    'Green': 'DarkGreen',
+    'Teal': 'Teal',
+    'Red': 'Red',
+    'Orange': 'Orange',
+    'Magenta': 'Magenta',
+    'Black': 'Black',
+    'White': 'White',
+}
 
 class QPaletteIcon(QIcon):
 
@@ -188,7 +196,7 @@ class QImagePainter(QSmoothGraphicsView):
 
         self._pen = QPen()
         self._pen.setWidth(50)
-        self.setPenColor(COLORS[0])
+        self.setPenColor(COLORS['Teleric Blue'])
 
         self._drawStartPos = None
         self._dynamicOval = None
@@ -340,7 +348,7 @@ class QImagePainter(QSmoothGraphicsView):
             self.setDragMode(QGraphicsView.NoDrag)
 
     def promptForPenWidth(self):
-        width, okPressed = QInputDialog.getInt(self, 'Pen Width','Pen width:', self._pen.width(), 1, 100, 1)
+        width, okPressed = QInputDialog.getInt(self, 'Pen Width','Pen width (px):', self._pen.width(), 1, 100, 1)
         if okPressed:
             self._pen.setWidth(width)
 
@@ -398,11 +406,11 @@ class QImagePainter(QSmoothGraphicsView):
                     self._pen.setColor(QColor(actionColor))
 
     def addPaletteToMenu(self, menu):
-        for c in COLORS:
-            paletteIcon = QPaletteIcon(c)
-            action = QAction(paletteIcon, c, self, checkable=True)
-            action.color = c
-            action.triggered.connect(lambda checked, color=c: self.setPenColor(color))
+        for name, color in COLORS.items():
+            paletteIcon = QPaletteIcon(color)
+            action = QAction(paletteIcon, name, self, checkable=True)
+            action.color = color
+            action.triggered.connect(lambda checked, color=color: self.setPenColor(color))
             menu.addAction(action)
 
     def initToolbar(self):
