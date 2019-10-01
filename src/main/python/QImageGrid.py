@@ -747,6 +747,8 @@ def openFilesThreaded(self, filePaths, progressSignal, gridOpenedSignal):
 
     for n, filePath in enumerate(filePaths):
 
+        print(filePath)
+
         if progressSignal is not None:
             progressSignal.emit(int(100*n/pathCount))
 
