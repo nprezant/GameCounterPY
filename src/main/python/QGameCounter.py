@@ -265,6 +265,7 @@ class QGameCounter(QMainWindow):
 
     def populateToolbars(self):
 
+        self.viewToolBar.addAction(self.imageGridsToggle)
         self.viewToolBar.addAction(self.addAnimalToggle)
         self.viewToolBar.addAction(self.trackerViewToggle)
 
