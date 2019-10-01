@@ -1,9 +1,24 @@
-from PyQt5.QtCore import Qt, QRectF, QMarginsF, QTimeLine, pyqtSignal
+from PyQt5.QtCore import Qt, QRectF, QMarginsF, QTimeLine, pyqtSignal, QSize
 from PyQt5.QtGui import QKeySequence, QImage, QPixmap, QPalette, QPainter, QWheelEvent, QKeyEvent, QIcon, QPen, QColor
 from PyQt5.QtWidgets import (
     QGraphicsView, QGraphicsScene, QGraphicsItem, QToolBar, QAction,
-    QApplication
+    QApplication, QInputDialog, QMenu, QToolButton, QPushButton
 )
+
+COLORS = [
+    '#3296e6', 'Blue', 'Red', 'Green'
+]
+
+class QPaletteIcon(QIcon):
+
+    def __init__(self, color):
+        super().__init__()
+
+        self.color = color
+
+        pixmap = QPixmap(100, 100)
+        pixmap.fill(QColor(color))
+        self.addPixmap(pixmap)
 
 class QSmoothGraphicsView(QGraphicsView):
     '''Implements smooth mouse/keyboard navigation'''
@@ -171,8 +186,9 @@ class QImagePainter(QSmoothGraphicsView):
         self.toolbar = QToolBar()
         self.initToolbar()
 
-        self._pen = QPen(QColor(50, 150, 230))
+        self._pen = QPen()
         self._pen.setWidth(50)
+        self.setPenColor(COLORS[0])
 
         self._drawStartPos = None
         self._dynamicOval = None
@@ -323,22 +339,71 @@ class QImagePainter(QSmoothGraphicsView):
         else:
             self.setDragMode(QGraphicsView.NoDrag)
 
-    def createActions(self):
-        if self.appContext is None:
-            selectionModeFp = './icons/selectIcon.png'
-            ovalModeFp = './icons/ovalIcon.png'
-            flattenFp = './icons/saveIcon.png'
-            undoFp = './icons/undoIcon.png'
-        else:
-            selectionModeFp = self.appContext.get_resource('selectIcon.png')
-            ovalModeFp = self.appContext.get_resource('ovalIcon.png')
-            flattenFp = self.appContext.get_resource('saveIcon.png')
-            undoFp = self.appContext.get_resource('undoIcon.png')
+    def promptForPenWidth(self):
+        width, okPressed = QInputDialog.getInt(self, 'Pen Width','Pen width:', self._pen.width(), 1, 100, 1)
+        if okPressed:
+            self._pen.setWidth(width)
 
-        self.selectionModeAct = QAction(QIcon(selectionModeFp), 'Select (v)', self, checkable=True, checked=True, shortcut=Qt.Key_V, triggered=self.toggleSelectionMode)
-        self.ovalModeAct = QAction(QIcon(ovalModeFp), 'Draw &Oval (o)', self, checkable=True, checked=False, shortcut=Qt.Key_O, triggered=self.toggleOvalMode)
-        self.flattenAct = QAction(QIcon(flattenFp), 'Save', self, shortcut=QKeySequence.Save, triggered=self.flattenImage)
-        self.undoAct = QAction(QIcon(undoFp), 'Undo', self, shortcut=QKeySequence.Undo, triggered=self.removeLastDrawnItem)
+    def setResourcePaths(self):
+        if self.appContext is None:
+            self.selectionModeFp = './icons/selectIcon.png'
+            self.ovalModeFp = './icons/ovalIcon.png'
+            self.flattenFp = './icons/saveIcon.png'
+            self.undoFp = './icons/undoIcon.png'
+            self.penFp = './icons/pen.png'
+            self.penWidthFp = './icons/penWidth.png'
+        else:
+            self.selectionModeFp = self.appContext.get_resource('selectIcon.png')
+            self.ovalModeFp = self.appContext.get_resource('ovalIcon.png')
+            self.flattenFp = self.appContext.get_resource('saveIcon.png')
+            self.undoFp = self.appContext.get_resource('undoIcon.png')
+            self.penFp = self.appContext.get_resource('pen.png')
+            self.penWidthFp = self.appContext.get_resource('penWidth.png')
+
+    def createActions(self):
+        self.setResourcePaths()
+        
+        self.selectionModeAct = QAction(QIcon(self.selectionModeFp), 'Select (v)', self, checkable=True, checked=True, shortcut=Qt.Key_V, triggered=self.toggleSelectionMode)
+        self.ovalModeAct = QAction(QIcon(self.ovalModeFp), 'Draw &Oval (o)', self, checkable=True, checked=False, shortcut=Qt.Key_O, triggered=self.toggleOvalMode)
+        self.flattenAct = QAction(QIcon(self.flattenFp), 'Save', self, shortcut=QKeySequence.Save, triggered=self.flattenImage)
+        self.undoAct = QAction(QIcon(self.undoFp), 'Undo', self, shortcut=QKeySequence.Undo, triggered=self.removeLastDrawnItem)
+
+        self.setPenWidthAct = QAction(QIcon(self.penWidthFp), 'Set Pen Width', self, triggered=self.promptForPenWidth)
+
+    def addPenToolMenu(self):
+        penButton = QToolButton(self)
+        penButton.setText('Pen')
+        penButton.setIcon(QIcon(self.penFp))
+        penButton.setPopupMode(QToolButton.InstantPopup)
+
+        self.penMenu = QMenu(penButton)
+        self.penMenu.addAction(self.setPenWidthAct)
+
+        self.addPaletteToMenu(self.penMenu)
+
+        penButton.setMenu(self.penMenu)
+
+        self.toolbar.addWidget(penButton)
+
+    def setPenColor(self, color):
+        for a in self.penMenu.actions():
+            a.setChecked(False)
+            try:
+                actionColor = a.color
+            except AttributeError:
+                pass
+            else:
+                if actionColor == color:
+                    a.setChecked(True)
+                    self._pen.setColor(QColor(actionColor))
+
+    def addPaletteToMenu(self, menu):
+        for c in COLORS:
+            paletteIcon = QPaletteIcon(c)
+            action = QAction(paletteIcon, c, self, checkable=True)
+            action.color = c
+            action.triggered.connect(lambda checked, color=c: self.setPenColor(color))
+            menu.addAction(action)
 
     def initToolbar(self):
         self.createActions()
@@ -347,7 +412,7 @@ class QImagePainter(QSmoothGraphicsView):
         # self.toolbar.addSeparator()
         self.toolbar.addAction(self.selectionModeAct)
         self.toolbar.addAction(self.ovalModeAct)
-
+        self.addPenToolMenu()
 
 
 class QImagePainterToolbar(QToolBar):
