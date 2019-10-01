@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal, QThreadPool
+from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal, QThreadPool, QFile, QTextStream
 from PyQt5.QtGui import QKeySequence, QIcon, QImage, QPixmap, QKeyEvent
 from PyQt5.QtWidgets import (
     QMessageBox, QMainWindow, QShortcut,
@@ -44,6 +44,9 @@ class QGameCounter(QMainWindow):
         self.setCorner(Qt.BottomRightCorner, Qt.RightDockWidgetArea)
 
         self._appContext = None
+        
+        self.stylesheetPath = 'QMainWindowStyle.qss'
+        self.readStyleSheet()
 
         # self.threadpool = QThreadPool()
 
@@ -69,6 +72,8 @@ class QGameCounter(QMainWindow):
         self.imagePainter.appContext = context
         self.tracker.appContext = context
 
+        self.readStyleSheet()
+
         self.setWindowIconFbs()
         self.createActions()
 
@@ -77,6 +82,15 @@ class QGameCounter(QMainWindow):
 
         self.populateToolbars()
         self.populateMenus()
+
+    def readStyleSheet(self):
+        if self.appContext is not None:
+            fp = self.appContext.get_resource(self.stylesheetPath)
+            f = QFile(fp)
+            f.open(QFile.ReadOnly | QFile.Text)
+            stream = QTextStream(f)
+            self.setStyleSheet(stream.readAll())
+            # f.close()
 
     def setWindowIconFbs(self):
         if self.appContext is None:
