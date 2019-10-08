@@ -279,6 +279,7 @@ class QGameCounter(QMainWindow):
         self.addToolBar(Qt.LeftToolBarArea, self.fileToolBar)
         self.addToolBar(Qt.LeftToolBarArea, self.imagePainter.toolbar)
         self.addToolBar(Qt.LeftToolBarArea, self.imageGridViewer.toolbar)
+        self.addToolBar(Qt.LeftToolBarArea, self.tracker.toolbar)
         self.addToolBar(Qt.LeftToolBarArea, self.viewToolBar)
 
 

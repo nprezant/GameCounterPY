@@ -393,7 +393,6 @@ class QGameCountTracker(QListWidget):
 
     def initToolbar(self):
         self.toolbar.addAction(self.summarizeAct)
-        self.toolbar.addAction(self.clearDataAct)
 
     def initMenu(self):
         self.menu.addAction(self.summarizeAct)
