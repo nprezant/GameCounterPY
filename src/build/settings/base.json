@@ -1,6 +1,6 @@
 {
-    "app_name": "GameCounter",
-    "author": "Noah",
+    "app_name": "Game Counter",
+    "author": "Noah Prezant",
     "main_module": "src/main/python/main.py",
     "version": "0.0.0"
 }
