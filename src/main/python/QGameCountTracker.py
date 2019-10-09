@@ -148,8 +148,8 @@ class MultiGameCountTracker(dict):
     def toHTML(self):
         s = ''
         for fileName, animalList in self.items():
-            s += f'<p>{fileName}</p>'
-            s += '<ul>'
+            s += f'<p style="margin-bottom:0;">{fileName}</p>'
+            s += '<ul style="margin-top:0;">'
             for data in animalList:
                 s += f'<li>{data}</li>'
             s += '</ul>'
