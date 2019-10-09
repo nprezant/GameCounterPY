@@ -711,6 +711,9 @@ class QImageGridViewer(QScrollArea):
 
     def initMenu(self):
         self.menu = QMenu('&Grids', self)
+        self.menu.addAction(self.promptGridRowsAct)
+        self.menu.addAction(self.promptGridColumnsAct)
+        self.menu.addSeparator()
         self.menu.addAction(self.itemFocusDownAct)
         self.menu.addAction(self.itemFocusUpAct)
         self.menu.addAction(self.itemFocusLeftAct)
@@ -718,9 +721,6 @@ class QImageGridViewer(QScrollArea):
         self.menu.addSeparator()
         self.menu.addAction(self.itemFocusNextAct)
         self.menu.addAction(self.itemFocusPreviousAct)
-        self.menu.addSeparator()
-        self.menu.addAction(self.promptGridRowsAct)
-        self.menu.addAction(self.promptGridColumnsAct)
         self.menu.addSeparator()
         self.menu.addAction(self.removeFocusedGridAct)
 
