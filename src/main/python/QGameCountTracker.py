@@ -133,7 +133,7 @@ class MultiGameCountTracker(dict):
         s = ''
 
         for species, count in totals.items():
-            s += f'<p>{count} {species}</p>'
+            s += f'<p style="padding:0;margin:0;">{count} {species}</p>'
 
         return s
 
