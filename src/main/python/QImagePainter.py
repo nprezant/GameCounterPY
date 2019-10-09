@@ -196,7 +196,7 @@ class QImagePainter(QSmoothGraphicsView):
 
         self._pen = QPen()
         self._pen.setWidth(50)
-        self.setPenColor(COLORS['Teleric Blue'])
+        self.setDefaultPenColor()
 
         self._drawStartPos = None
         self._dynamicOval = None
@@ -347,10 +347,29 @@ class QImagePainter(QSmoothGraphicsView):
         else:
             self.setDragMode(QGraphicsView.NoDrag)
 
+    @property
+    def penWidth(self):
+        return self._pen.width()
+
+    @penWidth.setter
+    def penWidth(self, value):
+        self._pen.setWidth(value)
+
+    @property
+    def penColor(self):
+        return self._pen.color()
+
+    @penColor.setter
+    def penColor(self, value):
+        self._pen.setColor(QColor(value))
+
+    def setDefaultPenColor(self):
+        self.setPenColor(COLORS['Teleric Blue']) 
+
     def promptForPenWidth(self):
-        width, okPressed = QInputDialog.getInt(self, 'Pen Width','Pen width (px):', self._pen.width(), 1, 100, 1)
+        width, okPressed = QInputDialog.getInt(self, 'Pen Width','Pen width (px):', self.penWidth, 1, 100, 1)
         if okPressed:
-            self._pen.setWidth(width)
+            self.penWidth = width
 
     def setResourcePaths(self):
         if self.appContext is None:
@@ -394,16 +413,17 @@ class QImagePainter(QSmoothGraphicsView):
         self.toolbar.addWidget(penButton)
 
     def setPenColor(self, color):
+        qColor = QColor(color)
         for a in self.penMenu.actions():
             a.setChecked(False)
             try:
-                actionColor = a.color
+                actionColor = QColor(a.color)
             except AttributeError:
                 pass
             else:
-                if actionColor == color:
+                if actionColor == qColor:
                     a.setChecked(True)
-                    self._pen.setColor(QColor(actionColor))
+                    self.penColor = actionColor
 
     def addPaletteToMenu(self, menu):
         for name, color in COLORS.items():

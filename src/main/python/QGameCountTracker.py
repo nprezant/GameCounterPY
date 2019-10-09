@@ -388,7 +388,7 @@ class QGameCountTracker(QListWidget):
             clearFp = self.appContext.get_resource('eraserIcon.png')
             infoFp = self.appContext.get_resource('infoIcon.png')
 
-        self.clearDataAct = QAction(QIcon(clearFp), '&Clear All Animal Counts', self, triggered=self.clearData)
+        self.clearDataAct = QAction(QIcon(clearFp), '&Delete All Animal Counts', self, triggered=self.clearData)
         self.summarizeAct = QAction(QIcon(infoFp), '&Summarize', self, shortcut=Qt.Key_S, triggered=self.displaySummary)
 
     def initToolbar(self):

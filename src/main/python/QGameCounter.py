@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal, QThreadPool, QFile, QTextStream
-from PyQt5.QtGui import QKeySequence, QIcon, QImage, QPixmap, QKeyEvent
+from PyQt5.QtCore import Qt, pyqtSlot, pyqtSignal, QThreadPool, QFile, QTextStream, QCoreApplication, QSettings, QSize, QPoint
+from PyQt5.QtGui import QKeySequence, QIcon, QImage, QPixmap, QKeyEvent, QGuiApplication
 from PyQt5.QtWidgets import (
     QMessageBox, QMainWindow, QShortcut,
     QMenu, QAction, qApp,
@@ -59,7 +59,14 @@ class QGameCounter(QMainWindow):
         
         self.setWindowTitle('Animal Counter')
         self.setWindowIconFbs()
-        self.resize(800, 500)
+
+        QCoreApplication.setOrganizationName('WAO')
+        QCoreApplication.setApplicationName('Game Counter')
+        self.readSettings()
+
+    def closeEvent(self, event):
+        self.writeSettings()
+        event.accept()
 
     @property
     def appContext(self):
@@ -98,6 +105,77 @@ class QGameCounter(QMainWindow):
         else:
             fp = self.appContext.get_resource('mainWindowIcon.png')
         self.setWindowIcon(QIcon(fp))
+
+    def writeSettings(self):
+        settings = QSettings()
+
+        settings.beginGroup('MainWindow')
+        settings.setValue('size', self.size())
+        settings.setValue('pos', self.pos())
+        settings.setValue('isMaximized', self.isMaximized())
+        settings.endGroup()
+
+        settings.beginGroup('Panels')
+        settings.setValue('tracker', self.trackerDock.isVisible())
+        settings.setValue('imageGrid', self.imageGridDock.isVisible())
+        settings.setValue('trackerAdd', self.trackerAddDock.isVisible())
+        settings.endGroup()
+
+        settings.beginGroup('ImageGrid')
+        settings.setValue('rows', self.imageGridViewer.rows)
+        settings.setValue('cols', self.imageGridViewer.cols)
+        settings.endGroup()
+
+        settings.beginGroup('ImagePainter')
+        settings.setValue('penWidth', self.imagePainter.penWidth)
+        settings.setValue('penColor', self.imagePainter.penColor)
+        settings.endGroup()
+
+    def readSettings(self):
+        settings = QSettings()
+
+        settings.beginGroup('MainWindow')
+        if settings.value('isMaximized') == True:
+            self.setWindowState(Qt.WindowMaximized)
+        else:
+            self.resize(settings.value('size', QSize(800, 500)))
+
+            # if there is no position already saved, it will center itself
+            if settings.contains('pos'):
+                self.move(settings.value('pos'))
+            else:
+                screenGeometry = QGuiApplication.primaryScreen().geometry()
+                screenHeight = screenGeometry.height()
+                screenWidth = screenGeometry.width()
+                self.move(QPoint(
+                    (screenWidth-self.size().width())/2,
+                    (screenHeight-self.size().height())/2
+                ))
+        settings.endGroup()
+
+        settings.beginGroup('Panels')
+        self.trackerDock.setVisible(settings.value('tracker', 'true')=='true')
+        self.imageGridDock.setVisible(settings.value('imageGrid', 'true')=='true')
+        self.trackerAddDock.setVisible(settings.value('trackerAdd', 'true')=='true')
+        settings.endGroup()
+
+        settings.beginGroup('ImageGrid')
+        self.imageGridViewer.rows = settings.value('rows', 2)
+        self.imageGridViewer.cols = settings.value('cols', 2)
+        settings.endGroup()
+
+        settings.beginGroup('ImagePainter')
+        self.imagePainter.penWidth = settings.value('penWidth', 30)
+        if settings.contains('penColor'):
+            self.imagePainter.setPenColor(settings.value('penColor'))
+        else:
+            self.imagePainter.setDefaultPenColor()
+        settings.endGroup()
+
+    def resetSettings(self):
+        settings = QSettings()
+        settings.clear()
+        self.readSettings()
 
     @pyqtSlot(QPixmap)
     def changeMainImage(self, newPixmap):
@@ -209,6 +287,7 @@ class QGameCounter(QMainWindow):
         self.exitAct = QAction('E&xit', self, shortcut='Ctrl+Q', triggered=self.close)
         self.aboutAct = QAction('&About', self, triggered=self.about)
         self.aboutQtAct = QAction('About &Qt', self, triggered=qApp.aboutQt)
+        self.resetSettingsAct = QAction('Default Settings', self, triggered=self.resetSettings)
 
         self.imageGridsToggle = self.imageGridDock.toggleViewAction()
         self.imageGridsToggle.setShortcut(Qt.CTRL + Qt.Key_G)
@@ -239,6 +318,7 @@ class QGameCounter(QMainWindow):
         self.fileMenu.addAction(self.saveAct)
         self.fileMenu.addAction(self.openAct)
         self.fileMenu.addSeparator()
+        self.fileMenu.addAction(self.resetSettingsAct)
         self.fileMenu.addAction(self.exitAct)
 
         self.viewMenu.addSeparator()

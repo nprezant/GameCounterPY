@@ -673,6 +673,22 @@ class QImageGridViewer(QScrollArea):
         self.toolbar.clear()
         self.initToolbar()
 
+    @property
+    def rows(self):
+        return QImageGrid.clsRows
+
+    @rows.setter
+    def rows(self, value):
+        QImageGrid.clsRows = value
+
+    @property
+    def cols(self):
+        return QImageGrid.clsCols
+
+    @cols.setter
+    def cols(self, value):
+        QImageGrid.clsCols = value
+
     def createActions(self):
         if self.appContext is None:
             refreshIconFp = './icons/refreshIcon.png'
