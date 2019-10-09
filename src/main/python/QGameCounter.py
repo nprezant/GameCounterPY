@@ -258,10 +258,9 @@ class QGameCounter(QMainWindow):
             # self.threadpool.start(worker)
 
             self.imageGridViewer.openFiles(imagePaths)
+            self.tracker.JSONDumpFile = imagePaths[0].parent / Path('counts.json')
             self.imageGridViewer.focusFirstGrid()
             self.imagePainter.centerImage()
-            if self.tracker.JSONDumpFile is None:
-                self.tracker.JSONDumpFile = imagePaths[0].parent / Path('counts.json')
 
         if JSONPaths:
             self.tracker.load(JSONPaths[0])

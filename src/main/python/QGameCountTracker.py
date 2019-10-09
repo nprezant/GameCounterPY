@@ -254,6 +254,7 @@ class QGameCountTracker(QListWidget):
         self._appContext = None
         self.addAnimalForm = QGameCountInputForm()
         self.addAnimalForm.animalAdded.connect(self.addAnimalData)
+        self.addAnimalForm.animalAdded.connect(self.dump)
 
         self.currentImageFile = ''
         self.JSONDumpFile = None
