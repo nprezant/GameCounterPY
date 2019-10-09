@@ -60,6 +60,8 @@ class QGameCounter(QMainWindow):
         self.setWindowTitle('Animal Counter')
         self.setWindowIconFbs()
 
+        self.fileDialogDirectory = Path().home()
+
         QCoreApplication.setOrganizationName('WAO')
         QCoreApplication.setApplicationName('Game Counter')
         self.readSettings()
@@ -113,6 +115,7 @@ class QGameCounter(QMainWindow):
         settings.setValue('size', self.size())
         settings.setValue('pos', self.pos())
         settings.setValue('isMaximized', self.isMaximized())
+        settings.setValue('fileDialogDirectory', self.fileDialogDirectory)
         settings.endGroup()
 
         settings.beginGroup('Panels')
@@ -135,6 +138,7 @@ class QGameCounter(QMainWindow):
         settings = QSettings()
 
         settings.beginGroup('MainWindow')
+
         if settings.value('isMaximized') == True:
             self.setWindowState(Qt.WindowMaximized)
         else:
@@ -151,6 +155,11 @@ class QGameCounter(QMainWindow):
                     (screenWidth-self.size().width())/2,
                     (screenHeight-self.size().height())/2
                 ))
+
+        self.fileDialogDirectory = Path(
+            settings.value('fileDialogDirectory', Path().home())
+        )
+
         settings.endGroup()
 
         settings.beginGroup('Panels')
@@ -204,13 +213,18 @@ class QGameCounter(QMainWindow):
         self.tracker.dump()
 
     def open(self):
+        QFileDialog().setDirectory(str(self.fileDialogDirectory))
         options = QFileDialog.Options()
         fileNames, _ = QFileDialog.getOpenFileNames(self, 
-            'Open image files', '',
+            'Open transect files', '',
             'Images/JSON (*.png *.jpeg *.jpg *.bmp *.gif *.json)',
             options=options)
 
         filePaths: Path = [Path(name) for name in fileNames]
+        if not filePaths:
+            return
+
+        self.fileDialogDirectory = filePaths[0].parent
 
         # remove JSON files from the paths
         JSONPaths: Path = []
