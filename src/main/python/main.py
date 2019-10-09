@@ -10,7 +10,7 @@ class AppContext(ApplicationContext):           # 1. Subclass ApplicationContext
         window = QGameCounter()
         window.appContext = self
         # window.imageGridViewer.appContext = self
-        version = self.build_settings['version']
+        window.version = self.build_settings['version']
         window.show()
         return self.app.exec_()                 # 3. End run() with this line
 

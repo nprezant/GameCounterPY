@@ -43,7 +43,9 @@ class QGameCounter(QMainWindow):
 
         self.setCorner(Qt.BottomRightCorner, Qt.RightDockWidgetArea)
 
+        # should be overwritten by the fbs run function
         self._appContext = None
+        self._version = None
         
         self.stylesheetPath = 'QMainWindowStyle.qss'
         self.readStyleSheet()
@@ -69,6 +71,15 @@ class QGameCounter(QMainWindow):
     def closeEvent(self, event):
         self.writeSettings()
         event.accept()
+
+    @property
+    def version(self):
+        return self._version
+
+    @version.setter
+    def version(self, value):
+        self._version = value
+        self.aboutAct.setText(f'&About v{self.version}')
 
     @property
     def appContext(self):
@@ -209,8 +220,9 @@ class QGameCounter(QMainWindow):
             self.imageGridViewer.hide()
 
     def save(self):
-        self.imagePainter.flattenImage()
-        self.tracker.dump()
+        if self.imageGridViewer.count() != 0:
+            self.imagePainter.flattenImage()
+            self.tracker.dump()
 
     def open(self):
         QFileDialog().setDirectory(str(self.fileDialogDirectory))
@@ -263,9 +275,13 @@ class QGameCounter(QMainWindow):
 
     def about(self):
         QMessageBox.about(self,
-            'About Image Grid Viewer',
-            '<p>The <b>Image Grid Viewer</b> displays images in a nice '
-            'scrolling grid.</p>')
+            f'About Game Counter v{self.version}',
+            '<p>The <b>Game Counter</b> provides convenient tools for '
+            'counting game animals in arial photographs.</p>'
+            '<p>Ideally, one can open a entire folder of photos '
+            'from a single transect, and use the built-in tools to '
+            '<b>circle</b> and <b>count</b> the game animals present.<p>'
+            '<p>Summarize your counts with <b>tracker | summarize.</b>')
 
     def keyPressEvent(self, event: QKeyEvent):
         key = event.key()
@@ -299,7 +315,7 @@ class QGameCounter(QMainWindow):
         self.saveAct = QAction(QIcon(saveIconFp), 'Save', self, shortcut=QKeySequence.Save, triggered=self.save)
         self.openAct = QAction(QIcon(openIconFp), '&Open...', self, shortcut=QKeySequence.Open, triggered=self.open)
         self.exitAct = QAction('E&xit', self, shortcut='Ctrl+Q', triggered=self.close)
-        self.aboutAct = QAction('&About', self, triggered=self.about)
+        self.aboutAct = QAction(f'&About', self, triggered=self.about)
         self.aboutQtAct = QAction('About &Qt', self, triggered=qApp.aboutQt)
         self.resetSettingsAct = QAction('Default Settings', self, triggered=self.resetSettings)
 

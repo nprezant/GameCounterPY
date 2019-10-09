@@ -555,6 +555,9 @@ class QImageGridViewer(QScrollArea):
 
         self.initMenu() # makes self.menu
 
+    def count(self):
+        return self.imageGrids.count()
+
     def readStyleSheet(self):
         f = QFile(self.appContext.get_resource(self.stylesheetPath))
         f.open(QFile.ReadOnly | QFile.Text)

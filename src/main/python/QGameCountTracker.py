@@ -343,10 +343,17 @@ class QGameCountTracker(QListWidget):
         return s
 
     def displaySummary(self):
-        QMessageBox.about(self, 'Count Summary',
-            self.counts.totalsSummaryHTML()
-            + '\n-------------------------\n'
-            + self.counts.toHTML())
+        if len(self.counts) == 0:
+            summary = (
+                'No counts recorded yet!'
+                '\nTry recording an animal count with the "Add New Animals" panel')
+        else:
+            summary = (
+                self.counts.totalsSummaryHTML()
+                + '\n-------------------------\n'
+                + self.counts.toHTML())
+
+        QMessageBox.about(self, 'Count Summary', summary)
 
     def serialize(self):
         return json.dumps(self.counts, cls=ObjectEncoder, indent=2, sort_keys=True)
