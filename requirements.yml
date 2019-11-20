@@ -1,0 +1,61 @@
+name: croppyfbs
+channels:
+  - anaconda
+  - brianjmcguirk
+  - defaults
+dependencies:
+  - altgraph=0.16.1=py_0
+  - astroid=2.2.5=py36_0
+  - boto3=1.7.62=py36h28b3542_1
+  - botocore=1.10.62=py36h28b3542_0
+  - ca-certificates=2019.5.15=1
+  - certifi=2019.6.16=py36_1
+  - colorama=0.4.1=py36_0
+  - console_shortcut=0.1.1=3
+  - docutils=0.15.2=py36_0
+  - fbs=0.7.4=py36_0
+  - freetype=2.9.1=ha9979f8_1
+  - future=0.17.1=py36_0
+  - icu=58.2=vc14hc45fdbb_0
+  - isort=4.3.21=py36_0
+  - jmespath=0.9.4=py_0
+  - jpeg=9b=vc14h4d7706e_1
+  - lazy-object-proxy=1.4.2=py36he774522_0
+  - libpng=1.6.37=h2a8f88b_0
+  - libtiff=4.0.10=hb898794_2
+  - macholib=1.11=py_0
+  - mccabe=0.6.1=py36_1
+  - openssl=1.1.1c=he774522_1
+  - pefile=2019.4.18=py_0
+  - pip=19.2.2=py36_0
+  - powershell_shortcut=0.0.1=2
+  - pycrypto=2.6.1=py36hfa6e2cd_9
+  - pyinstaller=3.4=py36h2a8f88b_1
+  - pylint=2.3.1=py36_0
+  - pyqt=5.9.2=py36h6538335_2
+  - python=3.6.8=h9f7ef89_7
+  - python-dateutil=2.8.0=py36_0
+  - pywin32=223=py36hfa6e2cd_1
+  - pywin32-ctypes=0.2.0=py36_0
+  - qt=5.9.7=vc14h73c81de_0
+  - rope=0.14.0=py_0
+  - s3transfer=0.1.13=py36_0
+  - setuptools=27.2.0=py36_1
+  - six=1.12.0=py36_0
+  - sqlite=3.27.2=he774522_0
+  - tk=8.6.7=vc14hb68737d_1
+  - typed-ast=1.3.4=py36he774522_0
+  - vc=14.1=h0510ff6_4
+  - vs2015_runtime=14.15.26706=h3a45250_0
+  - wheel=0.33.4=py36_0
+  - wrapt=1.11.2=py36he774522_0
+  - xz=5.2.4=h2fa13f4_4
+  - yaml=0.1.7=hc54c509_2
+  - zlib=1.2.11=vc14h1cdd9ab_1
+  - zstd=1.3.7=h508b16e_0
+  - pip:
+    - pyqt5==5.9.2
+    - pyqt5-sip==4.19.19
+    - sip==4.19.8
+prefix: C:\Users\Noah\Miniconda3\envs\croppyfbs
+
