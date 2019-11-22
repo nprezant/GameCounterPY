@@ -25,7 +25,7 @@ class GameCountData:
         return self.count - self.repeats
 
     def __str__(self):
-        return f'{self.count} {self.species}, ({self.unique} new)'
+        return f'{self.count} {self.species}, ({self.repeats} repeated)'
 
     def __repr__(self):
         return self.__str__()
